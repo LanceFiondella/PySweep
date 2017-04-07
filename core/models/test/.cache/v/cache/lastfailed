@@ -1,0 +1,6 @@
+{
+  "test_models.py::TestWeibull::()::test_aMLE": true,
+  "test_models.py::TestWeibull::()::test_bMLE": true,
+  "test_models.py::TestWeibull::()::test_cMLE": true,
+  "test_models.py::TestWeibull::()::test_logL": true
+}
