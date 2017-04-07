@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from scipy.optimize import fsolve
+from scipy.optimize import fsolve, root
 
 class Weibull():
     def __init__(self, kVec, tVec):
@@ -12,67 +12,103 @@ class Weibull():
         self.tn = self.tVec[-1] #Last time interval
         self.n = np.size(self.tVec) #Length of time interval vector
 
-        self.estimate_parameters()
+        #self.ECM()
 
-    def estimate_parameters(self):
+    def ECM(self):
         self.kVecCumul = np.cumsum(self.kVec)
         #Initial estimates
-        self.a0 = 1.0*self.total_failures
-        self.b0 = 1.0*self.total_failures/self.total_time
-        self.c0 = 1.0
-        #self.result = fsolve(self.MLE, [self.a0, self.b0, self.c0], (self.kVec, self.tVec), xtol=1e-24, maxfev=100000)
-        self.result = fsolve(self.MLE, [self.a0, self.b0, self.c0], (self.kVec, self.tVec), maxfev=100000)
-        (self.a, self.b, self.c) = self.result
-        print(self.mvf())
+        self.arule = [1.0*self.total_failures]
+        self.brule = [1.0*self.total_failures/self.total_time]
+        self.crule = [1.0]
 
-    def aMLE(self, ip, *args):
-        a = ip
-        b = args[0]
-        c = args[1]
-        kVec = args[2]
-        tVec = args[3]
+        self.ll_list = [self.logL(self.arule[0], self.brule[0], self.crule[0])]
+        self.ll_error_list = []
+        self.ll_error = 1
+        j = 0
+        while(self.ll_error > 10**-15):
+            
+            self.a_est = self.total_failures/(1 - math.exp(-self.brule[j] *  self.tn**self.crule[j]))
+            #print(a_est)
+            self.arule.append(self.a_est)
+            print("Estimated a: {}".format(self.a_est))
 
-    def MLE(self, ip, *args):
-        print(ip)
-        a = ip[0]
-        b = ip[1]
-        c = ip[2]
-        kVec = args[0]
-        tVec = args[1]
-        n = np.size(kVec)
+            b_args = (self.arule[j+1], self.crule[j], self.tVec)
+            self.b_est = fsolve(self.bMLE, self.brule[j], b_args)
+            print("Estimated b : {}".format(self.b_est))
+            self.brule.append(self.b_est[0])
 
+            c_args = (self.arule[j+1], self.brule[j+1], self.tVec)
+            self.c_est = fsolve(self.cMLE, self.crule[j], c_args)
+            print("Estimated c : {}".format(self.c_est))
+            self.crule.append(self.c_est[0])
 
-        sumi = [0,0,0]
-        for i in range(n):
-            sumi[0] += kVec[i]/a
-
-        for i in range(1,n):
-            powi = math.pow(tVec[i],c)
-            expi = math.exp(-b * powi)
-
-            powi1 = math.pow(tVec[i-1],c)
-            expi1 = math.exp(-b * math.pow(tVec[i-1],c))
-
-            sumi[1] += ((expi * powi - expi1 * powi1) * kVec[i]) / (expi1 - expi)
-            sumi[2] += (b * (expi * powi * math.log(tVec[i]) - expi1 * powi1 * math.log(tVec[i])) * kVec[i]) / (expi1 - expi)
-
-        #print(-b * math.pow(tVec[-1], c))
-        exptn = math.exp(-b * math.pow(tVec[-1], c))
-        expt1 = math.exp(b * math.pow(tVec[1], c))
+            self.ll_list.append(self.logL(self.a_est, self.b_est, self.c_est))
+            self.ll_error = self.ll_list[j] - self.ll_list[j-1]
+            self.ll_error_list.append(self.ll_error)
+            j += 1
+        print(self.ll_list[-1], self.arule[-1], self.brule[-1], self.crule[-1])
         
-        F1 = (-1 + exptn) + sumi[0]
-        F2 = (-a + exptn) + ((kVec[1] * math.pow(tVec[1], c)) / (expt1 - 1)) + sumi[1]
-        F3 = (-a * b * exptn * math.pow(tVec[-1], c) * math.log(tVec[-1])) + ((b * math.log(tVec[1]) * kVec[1] * math.pow(tVec[1], c)) / (expt1 - 1)) + sumi[2]
-        return [F1, F2, F3]
+    def logL(self, a, b, c):
+        sum_kveci_loga = 0
+        sum_kveci_logexp = 0
+        sum_log_kveci_fac = 0
+        
+        for i in range(self.kVec_len):
+            sum_kveci_loga += self.kVec[i] * math.log(a)
+            sum_log_kveci_fac += math.log(math.factorial(self.kVec[i]))
+            if i > 0:
+                #print(self.expo(i-1, b, c) - self.expo(i, b, c))
+                sum_kveci_logexp += self.kVec[i] * math.log(self.expo(i-1, b, c) - self.expo(i, b, c))
+        
+        logL = sum_kveci_loga + (self.kVec[0] * math.log(1 - self.expo(0, b, c))) + sum_kveci_logexp - a * (1 - self.expo(-1, b, c)) - sum_log_kveci_fac
+        return logL
 
+    def expo(self, x, b, c):
+        #print(b, c)
+        return math.exp(-b * self.tVec[x]**c)
 
+    def bMLE(self, ip, *args):
+        print(args)
+        b = ip[0]
+        a = args[0]
+        c = args[1]
+        tVec = args[2]
+        tn = tVec[-1]
+        #print("In bMLE: {} {} {} ".format(a,b,c))
+        exp_tn = math.exp(-b * tn**c)
+        sum_k = 0
+        n = np.size(tVec)
+        
+        for i in range(1,n):
+            numer = (self.tVec[i]**c * self.expo(i, b, c) - self.tVec[i-1]**c * self.expo(i-1, b, c))
+            denom = (self.expo(i-1, b, c) - self.expo(i, b, c))
+            sum_k += self.kVec[i] * numer / denom 
 
+        bprime = b - (sum_k - a * self.tVec[-1]**c * self.expo(-1, b, c) )
+        #print("Bprime : {} ".format(bprime))
+        return bprime
 
+    def cMLE(self, ip, *args):
+        c = ip[0]
+        a = args[0]
+        b = args[1]
+        tVec = args[2]
+        tn = tVec[-1]
+        exp_tn = math.exp(-b * tn**c)
+        n = np.size(tVec)
+        sum_k = 0
+        for i in range(1,n):
+            numer = (self.tVec[i]**c * self.expo(i, b, c) * math.log(tVec[i]) - self.tVec[i-1]**c * self.expo(i-1, b, c) * math.log(tVec[i-1]))
+            denom = (self.expo(i-1, b, c) - self.expo(i, b, c))
+            sum_k += self.kVec[i] * b * (numer / denom)
+
+        cprime = c - (sum_k - a * b * self.tVec[-1]**c * self.expo(-1, b, c) * math.log(tVec[-1]))
+        return cprime
 
     
     def exp(self,t):
         """Returns exponenial part of Weibull for use in other functions"""
-        self.ex = math.exp(-1 * self.b * math.pow(t,self.c))
+        self.ex = math.exp(-1 * self.b * t**self.c)
         return self.ex
 
     
