@@ -3,7 +3,7 @@ import csv
 def export_data(data, filename):
     with open(filename[0],'w') as f:
         for i,d in enumerate(data):
-            f.write("{},{}\n".format(i+1,d))
+            f.write("{},{}\n".format(d[0],d[1]))
 
 def import_data(filename):
     rows = []
@@ -15,5 +15,5 @@ def import_data(filename):
     if len(rows) == 1:
         print("Split the first row as errors")
     else:
-        data = [x[1] for x in rows]
+        data = [x for x in rows]
     return data

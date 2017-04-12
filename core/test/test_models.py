@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath("../"))
 #from weibull_mpm import Weibull
-from weibull import Weibull
+from models import Weibull
 import math
 
 
@@ -41,6 +41,8 @@ class TestWeibull:
 kVec = [1, 0, 1, 15, 15, 32, 29, 45, 34, 67, 41, 71, 77, 80, 80, \
            42, 60, 92, 31, 68, 51, 51, 30, 29, 31, 20, 31, 30, 7, 15, 3, 4, 15]
 tVec = [i+1 for i in range(len(kVec))]
+for i,k in enumerate(kVec):
+    print("{},{}".format(tVec[i],k))
 #w = Weibull(kVec, tVec)
 #w.ECM()
 #print(w.logL(1198.0, 2.1354, 1.0))

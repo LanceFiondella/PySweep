@@ -194,3 +194,17 @@ class Weibull():
 
         cprime = sum_k - a * b * np.power(self.tVec[-1],c) * self.expo(-1, b, c) * np.log(tVec[-1])
         return cprime
+
+    def get_peak_loc(self):
+        max_intensity = float('-inf')
+        max_intensity_index = 0
+        for i in range(len(self.tVec)):
+            fi = self.failure_intensity(self.a_est, self.b_est, self.c_est, i)
+            if fi > max_intensity:
+                max_intensity = fi
+                max_intensity_index = i
+        return max_intensity_index 
+
+    def failure_intensity(self, a, b, c, i):
+        return a * b * c * self.expo(i, b, c) * np.power(self.tVec[i], c-1)
+
