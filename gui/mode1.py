@@ -9,8 +9,15 @@ import sys, math
 
 
 class Mode1TabWidget(QWidget):
+    """
+    This class describes the placement of widgets in the Mode 1 tab
+    """
     def __init__(self):
         super(QWidget, self).__init__()
+        
+        self.tVec = []
+        self.kVec = []
+
         #self.layout = QHBoxLayout(self)
         self.layout = QGridLayout(self)
         self.layout.setColumnStretch(1, 2)
@@ -103,28 +110,27 @@ class Mode1TabWidget(QWidget):
         return buttonGroupBox
         
     def compute(self):
+        """
+        This function is run when the compute button is clicked
         #Verify data and start computation
+        """
         print("Compute")
         data = self.getTableData()
         if len(data) == 0:
-            d = QDialog()
-            buttons = QDialogButtonBox(
-                        QDialogButtonBox.Ok,
-                        Qt.Horizontal, self)
-            buttons.accepted.connect(d.accept)
-            msgLabel = QLabel("Error: No data found in table. Please add a dataset")
-            d.layout = QVBoxLayout(d)
-            d.layout.addWidget(msgLabel)
-            d.layout.addWidget(buttons)
-            d.setWindowTitle("No Data")
-            d.exec_()
+            QMessageBox.about(self, 'Error','No data found in table. Please add a dataset')
         else:
-            tVec = [a for a,b in data]
-            kVec = [b for a,b in data]
-            print(tVec, kVec)
-            self.cw = ComputeWidget(tVec, kVec)
-            self.cw.results.connect(self.saveAndDisplayResults)
-            #w = Weibull(kVec, tVec)
+            temp_tVec = [a for a,b in data]
+            temp_kVec = [b for a,b in data]
+            #If there has been a change in data, recompute MLEs. Else display previous results
+            if len(self.tVec) == 0 or self.tVec != temp_tVec or self.kVec != temp_kVec: 
+                self.tVec = temp_tVec
+                self.kVec = temp_kVec
+                #print(tVec, kVec)
+                self.cw = ComputeWidget(self.tVec, self.kVec)
+                self.cw.results.connect(self.saveAndDisplayResults)
+            else:
+                self.res = Mode1ResultsWidget(self.model)
+                
 
     def saveAndDisplayResults(self, weibull):
         self.model = weibull
@@ -241,16 +247,16 @@ class Mode1ResultsWidget(QWidget):
         return errorEstGroupBox
 
     def compute(self):
-        #try:
+        try:
             number = float(self.dataTextBox.text())
             if self.detNumIntRadioButton.isChecked():
                 self.cpd = CalculatePDialog(self.model, number)
             elif self.estNextMRadioButton.isChecked():
                 print("calculate M")
-        #except Exception:
+        except Exception:
             
-         #   QMessageBox.about(self, 'Error','Input can only be a number')
-         #   pass
+            QMessageBox.about(self, 'Error','Input can only be a number')
+            pass
     
     def genButtonLayout(self):
         buttonLayout = QHBoxLayout()
@@ -262,6 +268,7 @@ class Mode1ResultsWidget(QWidget):
         buttonLayout.addWidget(dataSheetButton)
         cancelButton = QPushButton('Cancel')
         buttonLayout.addWidget(cancelButton)
+        cancelButton.clicked.connect(self.close)
 
         return buttonLayout
         
@@ -306,7 +313,7 @@ class CalculatePDialog(QDialog):
         layout = QVBoxLayout()
         pefe = QLabel("Percentage (p) entered for estimate : {}".format(self.percent))
         intap = QLabel("Intervals needed to achieve p : {}".format(self.intervals))
-        irantap = QLabel("Intervals remaining after n needed to achieve p : {}".format(self.intervals_remain))
+        irantap = QLabel("Intervals remaining after n needed to achieve p : {}".format(self.intervalsRemain))
         layout.addWidget(pefe)
         layout.addWidget(intap)
         layout.addWidget(irantap)
@@ -317,7 +324,7 @@ class CalculatePDialog(QDialog):
         numer = math.log(1 - (self.percent / 100))
         term = - numer / self.model.b_est
         self.intervals = math.pow(term, 1/self.model.c_est)
-        self.intervals_remain = self.intervals - self.model.n
+        self.intervalsRemain = self.intervals - self.model.n
 
 class ComputeWidget(QWidget):
     results = PyQt5.QtCore.pyqtSignal(models.Weibull)

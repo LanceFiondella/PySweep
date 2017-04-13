@@ -5,7 +5,8 @@ This is an open source Python reimplementation of the SoftWare Error Estimation 
 Python 3.x
 PyQt5
 numpy
-scipy (Maybe)
+scipy
+mpmath
 
 ##License
 Copyright (c) 2017 Venkateswaran Shekar
