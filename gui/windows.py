@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QDialog, QVBoxLayout,\
     QLabel
 from PyQt5.QtCore import Qt
 from core import utils
-from gui.mode1 import Mode1TabWidget
+from gui import mode1, mode4
 import sys
 
 class MainWindow(QMainWindow):
@@ -48,6 +48,9 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(newProjectAction)
         fileMenu.addAction(openProjectAction)
         fileMenu.addAction(exitAction)
+    
+    def closeEvent(self, event):
+        qApp.quit()
         
 
     def createNewProject(self):
@@ -60,7 +63,10 @@ class MainWindow(QMainWindow):
     def openProject(self):
         fname = QFileDialog.getOpenFileName(self, 'Open File','.')
 
-        print(fname) 
+        print(fname)
+
+    
+
 
 
 class TabsWidget(QWidget):
@@ -69,14 +75,18 @@ class TabsWidget(QWidget):
         self.layout = QVBoxLayout(self)
 
         self.tabWidget = QTabWidget()
-        self.mode1tab = Mode1TabWidget()
+        self.mode1tab = mode1.Mode1TabWidget()
         self.mode2tab = QWidget()
+        self.mode3tab = QWidget()
+        self.mode4tab = mode4.Mode4TabWidget()
 
         self.tabWidget.addTab(self.mode1tab, "Mode 1")
         self.tabWidget.addTab(self.mode2tab, "Mode 2")
+        self.tabWidget.addTab(self.mode3tab, "Mode 3")
+        self.tabWidget.addTab(self.mode4tab, "Mode 4")
 
         self.layout.addWidget(self.tabWidget)
-        self.setLayout(self.layout)
+        #self.setLayout(self.layout)
 
         self.tabWidget.setTabEnabled(0,True)
         self.tabWidget.setTabEnabled(1,True)

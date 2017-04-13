@@ -10,6 +10,7 @@ class Weibull():
     def __init__(self, kVec, tVec):
         self.kVec = np.array(kVec, dtype=np.longdouble)              #Failure Counts (FC)
         self.tVec = np.array(tVec, dtype=np.longdouble)              #Time interval vector
+        self.kVec_cumu_sum = np.cumsum(self.kVec)
         self.kVec_len = np.size(self.kVec)      #Length of FC
         self.total_failures = self.kVec.sum()   #Sum of all recorded failures
         self.total_time = self.tVec.sum()       #Sum of all time intervals
@@ -17,6 +18,8 @@ class Weibull():
         self.n = np.size(self.tVec)             #Length of time interval vector
 
         self.results = self.ECM()
+        self.complete_MVF()
+        self.complete_FI()
 
     def ECM(self):
         """
@@ -208,3 +211,49 @@ class Weibull():
     def failure_intensity(self, a, b, c, i):
         return a * b * c * self.expo(i, b, c) * np.power(self.tVec[i], c-1)
 
+    def MVF(self, t, a, b, c):
+        """
+        MVF value at a single point in time
+        Use completeMVF to get all MVF values
+        """
+        return a * (1 - np.exp(-b * np.power(t,c)))
+
+    def complete_MVF(self):
+        """
+        Calculates MVF values for all tVec. It is assumed that MLEs are calculated.
+        """
+        self.MVF_vals = []
+        for t in self.tVec:
+            self.MVF_vals.append(self.MVF(t, self.a_est, self.b_est, self.c_est))
+        return self.MVF_vals
+
+    def complete_FI(self):
+        """
+        Calculates Failure Intensity values for all tVec. It is assumed that MLEs are calculated.
+        """
+        self.FI_vals = []
+        for i in range(len(self.tVec)):
+            self.FI_vals.append(self.failure_intensity(self.a_est, self.b_est, self.c_est, i))
+
+    @property
+    def error_delta(self):
+        """
+        Calculates the differene between the actual error and estimated error for each t in tVec
+        """
+        return self.kVec - self.MVF_vals
+
+    @property
+    def rel_delta(self):
+        return (self.kVec - self.MVF_vals) * 100 / self.kVec
+
+    @property
+    def MVF_cumu_sum(self):
+        return np.cumsum(self.MVF_vals)
+
+    @property
+    def cumu_delta(self):
+        return self.kVec_cumu_sum - self.MVF_cumu_sum
+
+    @property
+    def cumu_rel_delta(self):
+        return self.cumu_delta * 100 / self.kVec_cumu_sum
