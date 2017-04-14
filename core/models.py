@@ -134,7 +134,12 @@ class Weibull():
             else:
                 numer = (np.power(self.tVec[i],c) * self.expo(i, b, c))
                 denom = ( 1 - self.expo(i, b, c))
-            sum_k += self.kVec[i] * numer / denom 
+            if denom == 0 and i >0:
+                denom = exp(-b * power(str(self.tVec[i-1]),c)) - exp(-b * power(str(self.tVec[i]),c))
+                numer = mp.mpf(float(numer))
+            
+            
+            sum_k += self.kVec[i] * float(numer / denom) 
             #print("sumk : {} * {} / {}  ::  b = {}, c = {}".format(self.kVec[i], numer, denom, b, c) )
 
         bprime =  sum_k - a * np.power(self.tVec[-1],c) * self.expo(-1, b, c)
