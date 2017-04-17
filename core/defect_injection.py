@@ -29,12 +29,12 @@ class DefectInjection():
     @property
     def DDR(self):
         """ Detected col in 'Phase Injection' plot (Fig.4-26 Right plot in Sweep manual)"""
-        return [self.di_matrix[i,i] for i in range(self.num_phases)]
+        return np.array([self.di_matrix[i,i] for i in range(self.num_phases)])
 
     @property
     def L1(self):
         """ Initial estimate of defect latency (L1) """
-        return [self.di_matrix[i,i]*self.leakage_rate for i in range(self.num_phases)]
+        return np.array([self.di_matrix[i,i]*self.leakage_rate for i in range(self.num_phases)])
 
     @property
     def I1(self):
@@ -71,27 +71,27 @@ class DefectInjection():
     def DR(self):
         """Defect rate per phase"""
         sumDF = np.sum(self.DF)
-        return [d/sumDF for d in self.DF]
+        return np.array([d/sumDF for d in self.DF])
 
     @property
     def PLD(self):
         """Proportion of latent defects per phase (PLD)"""
-        return [self.L1[i] + (self.DR[i] * self.IEL) for i in range(self.num_phases)]
+        return np.array([self.L1[i] + (self.DR[i] * self.IEL) for i in range(self.num_phases)])
     
     @property
     def ENID(self):
         """Estimated number of injected defects per phase"""
-        return [self.DF[i] + self.PLD[i] for i in range(self.num_phases)]
+        return np.array([self.DF[i] + self.PLD[i] for i in range(self.num_phases)])
 
     #Final Injection Calculations----------------------------------------------------------------------
     @property
     def I2(self):
-        return [self.I1[i] + (self.DR[i] * self.IEL) for i in range(self.num_phases)]
+        return np.array([self.I1[i] + (self.DR[i] * self.IEL) for i in range(self.num_phases)])
 
     @property
     def L2(self):
         """Final estimate of defect latency per phase"""
-        return [self.I2[i] - np.sum(self.di_matrix[i,:]) for i in range(self.num_phases)]
+        return np.array([self.I2[i] - np.sum(self.di_matrix[i,:]) for i in range(self.num_phases)])
 
     @property
     def LEAK(self):
@@ -156,7 +156,7 @@ class DefectInjection():
     @property
     def EFC(self):
         """Defect detection Efficiency"""
-        return [self.di_matrix[i,i]/self.I2[i] for i in range(self.num_phases)]
+        return np.array([self.di_matrix[i,i]/self.I2[i] for i in range(self.num_phases)])
 
     @property
     def APDE(self):
@@ -186,7 +186,7 @@ class DefectInjection():
     @property
     def EFV(self):
         """Effectiveness of defect detection"""
-        return [ self.efv_val(i) for i in range(self.num_phases)]
+        return np.array([self.efv_val(i) for i in range(self.num_phases)])
 
     def efv_val(self, i):
         if i == 0:

@@ -7,6 +7,7 @@ import PyQt5
 from core import utils, models, defect_injection
 import sys, math
 import matplotlib
+import numpy as np
 matplotlib.use('QT5Agg')
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -203,38 +204,79 @@ class Mode4ResultsDialog(QDialog):
         self.phaseInjectionTab.setLayout(self.genRightPlot())
         self.leakageByPhaseTab = QWidget()
         self.leakageByPhaseTab.setLayout(self.genLeakageRatePlot())
+        self.finalComputationTab = QWidget()
+        self.finalComputationTab.setLayout(self.genFinalCompTable())
 
         self.tabWidget.addTab(self.defectsInPhaseTab, "Defects/KSLOC Injected or Discovered in Phase")
         self.tabWidget.addTab(self.phaseInjectionTab,"Phase Injection/Detection/Leakage")
         self.tabWidget.addTab(self.leakageByPhaseTab,"Percentage Leakage by Phase")
+        self.tabWidget.addTab(self.finalComputationTab,"Final Computation")
 
         
         layout.addWidget(self.tabWidget)
-
-
-        
         self.setWindowTitle("Defect Discovery and Injection Profiles")
         layout.setAlignment(Qt.AlignTop)
         self.setGeometry(400,400,1000, 800)
         self.show()
 
-    def genButtons(self):
-        layout = QHBoxLayout()
-        percentLeakageButton = QPushButton('Percentage Leakage by Phase')
-        percentLeakageButton.clicked.connect(self.percentLeakageDialog())
-        injectionMatricesButton = QPushButton('Injection/Leakage Matrices')
-        injectionMatricesButton.clicked.connect(self.injectionMatricesDialog())
-        qualityMatrixButton = QPushButton('Quality Metrics')
-        qualityMatrixButton.clicked.connect(self.qualityMatrixDialog())
-        closeButton = QPushButton('Close')
-        closeButton.clicked.connect(self.close())
+    def genFinalCompTable(self):
+        layout = QVBoxLayout()
 
-        layout.addWidget(percentLeakageButton)
-        layout.addWidget(injectionMatricesButton)
-        layout.addWidget(qualityMatrixButton)
-        layout.addWidget(closeButton)
+        #Generate final outputs
+        labels = ["<b>Overall Defect Discovery Efficiency:</b> {:.2f}%".format(self.di.ODDE*100), 
+                "<b>Initial Average Phase Defect Discovery Efficiency:</b> {:.2f}%".format(self.di.ADE*100),
+                "<b>Average Phase Defect Discovery Efficiency:</b> {:.2f}%".format(self.di.APDE*100),
+                "<b>Initial Average Phase Defect Leakage:</b> {:.2f}%".format(self.di.ADL*100),
+                "<b>Average Phase Defect Leakage:</b> {:.2f}%".format(self.di.APDL*100),
+                "<b>Latent Defects as % of Total Defects Injected:</b> {:.2f}%".format(self.di.LDPD*100),
+                "<b>Total Defects Injected / KSLOC:</b> {:.2f}".format(self.di.TDI),
+                "<b>Latent Defects / KSLOC:</b> {:.2f}".format(self.di.LD)
+                ]
+
+        for label in labels:
+            l = QLabel()
+            l.setText(label)
+            layout.addWidget(l)
+
+        #Generate table
+        tableWidget = QTableWidget()
+        tableWidget.setColumnCount(1+self.di.num_phases)
+        tableWidget.setHorizontalHeaderLabels(['Total Injected']+self.di.names)
         
+        tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        data = self.di.di_matrix
+
+        #Adding Injection Matrix
+        for row in range(len(data)):
+            tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases + 1)]
+            tableWidget.insertRow(row)
+            for col in range(len(tableItemRow)):
+                if col == 0:
+                    tableItemRow[col].setText('{:.2f}'.format(self.di.I2[row]))
+                else:
+                    tableItemRow[col].setText('{:.2f}'.format(data[row, col-1]))
+                tableWidget.setItem(row, col, tableItemRow[col])
+
+        #Adding other stats
+        tableWidget.insertRow(len(data)) #Seperates data
+        curr_row = len(data) + 1
+        calc = np.append(self.di.TDI, self.di.D2)
+        user_ip = np.append(self.di.total_defects, self.di.detection_profile)
+        rel_error = calc-user_ip
+        data = [calc, user_ip, rel_error]
+
+        for row in range(len(data)):
+            tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases + 1)]
+            tableWidget.insertRow(curr_row + row)
+            for col in range(len(tableItemRow)):
+                tableItemRow[col].setText('{:.2f}'.format(data[row][col]))
+                tableWidget.setItem(curr_row + row, col, tableItemRow[col])
+
+        tableWidget.setVerticalHeaderLabels(self.di.names + [' ', 'Calculated', 'User Input Defects', 'Relative Error'])
+        layout.addWidget(tableWidget)
         return layout
+
+
 
     def genDataLabels(self):
         layout = QHBoxLayout()
@@ -248,10 +290,10 @@ class Mode4ResultsDialog(QDialog):
 
     def genRightPlot(self):
         #Figure definition
-        self.fig2 = plt.figure()
-        self.canvas2 = FigureCanvas(self.fig2)
-        self.toolbar2 = NavigationToolbar(self.canvas2, self)
-        ax2 = self.fig2.add_subplot(111)
+        fig2 = plt.figure()
+        canvas2 = FigureCanvas(fig2)
+        toolbar2 = NavigationToolbar(canvas2, self)
+        ax2 = fig2.add_subplot(111)
         ax2.set_xticklabels([""] + self.di.names) #Shifting names 
         ax2.bar([i+1-0.2 for i in range(self.di.num_phases)], self.di.I2, width=0.2, color='b', label="Injected")
         ax2.bar([i+1 for i in range(self.di.num_phases)], self.di.DDR, width=0.2, color='r', label="Detected")
@@ -260,35 +302,35 @@ class Mode4ResultsDialog(QDialog):
         ax2.set_ylabel("Errors")
         ax2.set_title("Phase Injection/Detection/Leakage")
         ax2.legend()
-        self.canvas2.draw()
+        canvas2.draw()
 
         #Table definition
-        self.tableWidget2 = QTableWidget()
-        self.tableWidget2.setRowCount(3)
-        self.tableWidget2.setColumnCount(self.di.num_phases)
-        self.tableWidget2.setHorizontalHeaderLabels(self.di.names)
-        self.tableWidget2.setVerticalHeaderLabels(['Injected','Detected', 'Leakage'])
-        self.tableWidget2.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        tableWidget2 = QTableWidget()
+        tableWidget2.setRowCount(3)
+        tableWidget2.setColumnCount(self.di.num_phases)
+        tableWidget2.setHorizontalHeaderLabels(self.di.names)
+        tableWidget2.setVerticalHeaderLabels(['Injected','Detected', 'Leakage'])
+        tableWidget2.setEditTriggers(QAbstractItemView.NoEditTriggers)
         data = [self.di.I2, self.di.DDR, self.di.LEAK]
-        for row in range(3):
+        for row in range(len(data)):
             tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases)]
             for col in range(self.di.num_phases):
                 tableItemRow[col].setText('{:.2f}'.format(data[row][col]))
-                self.tableWidget2.setItem(row, col, tableItemRow[col])
+                tableWidget2.setItem(row, col, tableItemRow[col])
 
         layoutfig2 = QVBoxLayout()
-        layoutfig2.addWidget(self.toolbar2)
-        layoutfig2.addWidget(self.canvas2, 1)
-        layoutfig2.addWidget(self.tableWidget2)
-        layoutfig2.setAlignment(self.tableWidget2, Qt.AlignBottom)
+        layoutfig2.addWidget(toolbar2)
+        layoutfig2.addWidget(canvas2, 1)
+        layoutfig2.addWidget(tableWidget2)
+        layoutfig2.setAlignment(tableWidget2, Qt.AlignBottom)
         return layoutfig2
 
     def genLeftPlot(self):
         #figure def
-        self.fig1 = plt.figure()
-        self.canvas1 = FigureCanvas(self.fig1)
-        self.toolbar1 = NavigationToolbar(self.canvas1, self)
-        ax1 = self.fig1.add_subplot(111)
+        fig = plt.figure()
+        canvas = FigureCanvas(fig)
+        toolbar = NavigationToolbar(canvas, self)
+        ax1 = fig.add_subplot(111)
         ax1.set_xticklabels([""] + self.di.names) #Shifting names 
         ax1.bar([i+1-0.2 for i in range(self.di.num_phases)], self.di.I2, width=0.4, color='b', label="Injected")
         ax1.bar([i+1+0.2 for i in range(self.di.num_phases)], self.di.D2, width=0.4, color='r', label="Detected")
@@ -296,28 +338,28 @@ class Mode4ResultsDialog(QDialog):
         ax1.set_ylabel("Errors")
         ax1.set_title("Defects/KSLOC Injected or discovered in phase")
         ax1.legend()
-        self.canvas1.draw()
+        canvas.draw()
 
         #table def
-        self.tableWidget1 = QTableWidget()
-        self.tableWidget1.setRowCount(2)
-        self.tableWidget1.setColumnCount(self.di.num_phases)
-        self.tableWidget1.setHorizontalHeaderLabels(self.di.names)
-        self.tableWidget1.setVerticalHeaderLabels(['Injected','Detected'])
-        self.tableWidget1.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        tableWidget = QTableWidget()
+        tableWidget.setRowCount(2)
+        tableWidget.setColumnCount(self.di.num_phases)
+        tableWidget.setHorizontalHeaderLabels(self.di.names)
+        tableWidget.setVerticalHeaderLabels(['Injected','Detected'])
+        tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         data = [self.di.I2, self.di.D2]
-        for row in range(2):
+        for row in range(len(data)):
             tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases)]
             for col in range(self.di.num_phases):
                 tableItemRow[col].setText('{:.2f}'.format(data[row][col]))
-                self.tableWidget1.setItem(row, col, tableItemRow[col])
+                tableWidget.setItem(row, col, tableItemRow[col])
 
-        layoutfig1 = QVBoxLayout()
-        layoutfig1.addWidget(self.toolbar1)
-        layoutfig1.addWidget(self.canvas1, 1)
-        layoutfig1.addWidget(self.tableWidget1)
-        layoutfig1.setAlignment(self.tableWidget1, Qt.AlignBottom)
-        return layoutfig1
+        layoutfig = QVBoxLayout()
+        layoutfig.addWidget(toolbar)
+        layoutfig.addWidget(canvas, 1)
+        layoutfig.addWidget(tableWidget)
+        layoutfig.setAlignment(tableWidget, Qt.AlignBottom)
+        return layoutfig
 
 
     def genLeakageRatePlot(self):
@@ -335,14 +377,17 @@ class Mode4ResultsDialog(QDialog):
         canvas.draw()
 
         #table def
+        print(self.di.EFC)
+        print(self.di.EFV)
+        data = [self.di.LRATE*100.0, self.di.EFC*100.0, self.di.EFV*100.0]
         tableWidget1 = QTableWidget()
-        tableWidget1.setRowCount(1)
+        tableWidget1.setRowCount(len(data))
         tableWidget1.setColumnCount(self.di.num_phases)
         tableWidget1.setHorizontalHeaderLabels(self.di.names)
-        tableWidget1.setVerticalHeaderLabels(['Percentage\nof Defects'])
+        tableWidget1.setVerticalHeaderLabels(['Percentage\nof Defects', "Efficiency", "Effectiveness"])
         tableWidget1.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        data = [self.di.LRATE*100]
-        for row in range(1):
+        
+        for row in range(len(data)):
             tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases)]
             for col in range(self.di.num_phases):
                 tableItemRow[col].setText('{:.2f}'.format(data[row][col]))
