@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import fsolve, root, ridder
 from mpmath import mp, log, exp, power
 
-mp.dps = 15 #Set the precision of calculations 
+mp.dps = 50 #Set the precision of calculations 
 mp.pretty =  True #Set pretty print to True
 
 class Weibull():
@@ -20,6 +20,7 @@ class Weibull():
         self.results = self.ECM()
         self.complete_MVF()
         self.complete_FI()
+
 
     def ECM(self):
         """
@@ -90,7 +91,6 @@ class Weibull():
             sum_kveci_loga += self.kVec[i] * np.log(a)
             sum_log_kveci_fac += math.log(np.math.factorial(self.kVec[i]))
             if i > 0:
-                #print(self.expo(i-1, b, c) - self.expo(i, b, c))
                 sum_kveci_logexp += self.kVec[i] * np.log(self.expo(i-1, b, c) - self.expo(i, b, c))
         
         #print(sum_kveci_logexp - sum_log_kveci_fac + self.kVec[0] * np.log(1 - self.expo(0, b, c)))
@@ -135,7 +135,7 @@ class Weibull():
                 numer = (np.power(self.tVec[i],c) * self.expo(i, b, c))
                 denom = ( 1 - self.expo(i, b, c))
             if denom == 0 and i >0:
-                denom = exp(-b * power(str(self.tVec[i-1]),c)) - exp(-b * power(str(self.tVec[i]),c))
+                denom = exp(-mp.mpf(str(b)) * power(str(self.tVec[i-1]),c)) - exp(-mp.mpf(str(b)) * power(str(self.tVec[i]),c))
                 numer = mp.mpf(float(numer))
             
             
@@ -216,12 +216,15 @@ class Weibull():
     def failure_intensity(self, a, b, c, i):
         return a * b * c * self.expo(i, b, c) * np.power(self.tVec[i], c-1)
 
+    def fi_t(self, a, b, c, t):
+        return a * b * c * np.exp(-b * np.power(t,c)) * np.power(t, c-1)
+
     def MVF(self, t, a, b, c):
         """
         MVF value at a single point in time
         Use completeMVF to get all MVF values
         """
-        return a * (1 - np.exp(-b * np.power(t,c)))
+        return a * (1 - np.exp(-b * np.power(t, c)))
 
     def complete_MVF(self):
         """

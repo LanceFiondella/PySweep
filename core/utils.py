@@ -14,3 +14,12 @@ def import_data(filename):
             rows.append(row)
     data = [x for x in rows]
     return data
+
+class GlobalData():
+    def __init__(self):
+        #Define input data
+        #The inputs/output for each mode will have labels of the format modex where x is the mode number
+        self.input = {}
+        
+        #Define output data
+        self.output = {}

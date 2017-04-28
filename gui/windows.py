@@ -10,13 +10,17 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QDialog, QVBoxLayout,\
     QLabel
 from PyQt5.QtCore import Qt
 from core import utils
-from gui import mode1, mode4
+from gui import mode1, mode2, mode4
 import sys
+
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow,self).__init__()
+        self.globalData = utils.GlobalData()
         self.initUI() 
+        
 
     def initUI(self):
         self.statusBar().showMessage('Ready')
@@ -65,18 +69,15 @@ class MainWindow(QMainWindow):
 
         print(fname)
 
-    
-
-
 
 class TabsWidget(QWidget):
     def __init__(self, parent):
         super(QWidget, self).__init__(parent)
         self.layout = QVBoxLayout(self)
-
+        
         self.tabWidget = QTabWidget()
-        self.mode1tab = mode1.Mode1TabWidget()
-        self.mode2tab = QWidget()
+        self.mode1tab = mode1.Mode1TabWidget(parent.globalData)
+        self.mode2tab = mode2.Mode2TabWidget(parent.globalData)
         self.mode3tab = QWidget()
         self.mode4tab = mode4.Mode4TabWidget()
 
