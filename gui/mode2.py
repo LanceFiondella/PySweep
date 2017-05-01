@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 class Mode2TabWidget(ModeTabWidget):
     def __init__(self, globalData):
-        super().__init__()
+        super().__init__(globalData)
         self.globalData = globalData
         self.modex = 'mode2'
         self.tableWidget.setHorizontalHeaderLabels(['Phase Name','Data Points'])
@@ -29,6 +29,8 @@ class Mode2TabWidget(ModeTabWidget):
 
     def compute(self):
         data = self.getTableData()
+        self.phaseNames = self.globalData.input[self.modex]['names']
+        self.phaseValues = self.globalData.input[self.modex]['values']
         if len(data) == 0:
             QMessageBox.about(self, 'Error','No data found in table. Please add a dataset')
         elif max(self.phaseValues) > len(self.globalData.input['mode1']['tVec']):
@@ -43,7 +45,22 @@ class Mode2TabWidget(ModeTabWidget):
 
     def saveAndDisplayResults(self, models):
         print("saving results...  {}".format(len(models)))
+        self.globalData.output[self.modex] = models
         self.resultWindow = Mode2ResultsWidget(models, self.phaseNames)
+    
+    def populateTable(self):
+        #self.setGlobalData(data)
+        col1Name = 'names'
+        col2Name = 'values'
+        data = self.globalData.input[self.modex]
+        self.tableWidget.setRowCount(len(data[col1Name]))
+        for i in range(len(data[col1Name])):
+            tVec = QTableWidgetItem()
+            kVec = QTableWidgetItem()
+            tVec.setText(str(data[col1Name][i]))
+            kVec.setText(str(data[col2Name][i]))
+            self.tableWidget.setItem(i,0,tVec)
+            self.tableWidget.setItem(i,1,kVec)
 
 
 class Mode2ResultsWidget(QWidget):

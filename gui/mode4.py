@@ -16,8 +16,10 @@ import matplotlib.pyplot as plt
 from gui.mode_template import ModeTabWidget
 
 class Mode4TabWidget(ModeTabWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, globalData):
+        super().__init__(globalData)
+        self.globalData = globalData
+        self.modex = 'mode4'
         self.tableWidget.setHorizontalHeaderLabels(['Phase Name','Defects Detected/\nKSLOC'])
     
     def addComputationButtons(self):
@@ -65,6 +67,20 @@ class Mode4TabWidget(ModeTabWidget):
                 raise
         data = {'data':data, 'names':names}
         return data
+    
+    def populateTable(self):
+        #self.setGlobalData(data)
+        col1Name = 'names'
+        col2Name = 'values'
+        data = self.globalData.input[self.modex]
+        self.tableWidget.setRowCount(len(data[col1Name]))
+        for i in range(len(data[col1Name])):
+            tVec = QTableWidgetItem()
+            kVec = QTableWidgetItem()
+            tVec.setText(str(data[col1Name][i]))
+            kVec.setText(str(data[col2Name][i]))
+            self.tableWidget.setItem(i,0,tVec)
+            self.tableWidget.setItem(i,1,kVec)
 
 
 

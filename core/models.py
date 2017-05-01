@@ -75,8 +75,8 @@ class Weibull():
             j += 1
             self.ll_error = self.ll_list[j] - self.ll_list[j-1]
             self.ll_error_list.append(self.ll_error)
-        print('Total iterations : {} '.format(j))    
-        print(self.ll_list[-1], self.arule[-1], self.brule[-1], self.crule[-1])
+        #print('Total iterations : {} '.format(j))    
+        #print(self.ll_list[-1], self.arule[-1], self.brule[-1], self.crule[-1])
         return {'ll':self.ll_list[-1], 'a':self.arule[-1], 'b':self.brule[-1], 'c':self.crule[-1]}
         
     def logL(self, a, b, c):

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout,\
     QDialogButtonBox, QFileDialog, QWidget, QTableWidget,\
     QTableWidgetItem, QGridLayout, QPushButton, QHBoxLayout, QHeaderView, QGroupBox,\
-    QLabel, QProgressBar, QRadioButton, QLineEdit, QMessageBox, QAbstractItemView
+    QLabel, QProgressBar, QRadioButton, QLineEdit, QMessageBox, QAbstractItemView, QTabWidget
 from PyQt5.QtCore import Qt
 import PyQt5
 from core import utils, models
@@ -9,12 +9,14 @@ import sys, math
 import matplotlib
 matplotlib.use('QT5Agg')
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from gui.mode_template import ModeTabWidget
 
 class Mode1TabWidget(ModeTabWidget):
     def __init__(self, globalData):
         self.globalData = globalData
-        super().__init__()
+        super().__init__(globalData)
         self.tableWidget.setHorizontalHeaderLabels(['Time Interval','Errors'])
         self.modex = 'mode1'
 
@@ -53,6 +55,20 @@ class Mode1TabWidget(ModeTabWidget):
         self.globalData.output['mode1'] = weibull
         self.res = Mode1ResultsWidget(self.model)
 
+    def populateTable(self):
+        #self.setGlobalData(data)
+        col1Name = 'tVec'
+        col2Name = 'kVec'
+        data = self.globalData.input[self.modex]
+        self.tableWidget.setRowCount(len(data[col1Name]))
+        for i in range(len(data[col1Name])):
+            tVec = QTableWidgetItem()
+            kVec = QTableWidgetItem()
+            tVec.setText(str(data[col1Name][i]))
+            kVec.setText(str(data[col2Name][i]))
+            self.tableWidget.setItem(i,0,tVec)
+            self.tableWidget.setItem(i,1,kVec)
+
 
 class Mode1ResultsWidget(QDialog):
     def __init__(self, weibull, parent=None):
@@ -69,19 +85,36 @@ class Mode1ResultsWidget(QDialog):
         self.estPeakLocation = QLabel()
         self.estPeakLocation.setText("<b>Estimated location of peak:</b> {} ".format(self.model.get_peak_loc()+1)) #Added 1 because of Python 0 indexing
 
+        self.tabWidget = QTabWidget()
+        self.cumuCurveTab = QWidget()
+        self.cumuCurveTab.setLayout(self.genCumuCurve())
+        self.inciCurveTab = QWidget()
+        self.inciCurveTab.setLayout(self.genInciCurve())
+        self.dataSheetTab = QWidget()
+        self.dataSheetTab.setLayout(self.genDataSheet())
+        self.estErrorsTab = QWidget()
+        self.estErrorsTab.setLayout(self.genErrorEstLayout())
+        
+        self.tabWidget.addTab(self.cumuCurveTab, "Cumulative Curve")
+        self.tabWidget.addTab(self.inciCurveTab,"Incidence Curve")
+        self.tabWidget.addTab(self.dataSheetTab, "Time Based Model Output Data Sheet")
+        self.tabWidget.addTab(self.estErrorsTab,"Estimated Errors")
+
+
         layout.addWidget(self.errorsToDate)
         layout.addWidget(self.totalProjected)
         layout.addWidget(self.percentOfErrors)
         layout.addWidget(self.estPeakLocation)
-        layout.addWidget(self.genErrorEstLayout())
-        layout.addLayout(self.genButtonLayout())
         
+        #layout.addWidget(self.genErrorEstLayout())
+        layout.addWidget(self.tabWidget)
+        layout.addLayout(self.genButtonLayout())
         self.setWindowTitle("Estimated Errors")
         self.move(400,400)
         self.show()
     
     def genErrorEstLayout(self):
-        errorEstGroupBox = QGroupBox("Error Estimate Selection", self)
+        #errorEstGroupBox = QGroupBox("Error Estimate Selection", self)
         layout = QVBoxLayout()
         self.estNextMRadioButton = QRadioButton("Estimate the number of Errors in Next (m) Intervals")
         self.estNextMRadioButton.setChecked(True)
@@ -102,88 +135,77 @@ class Mode1ResultsWidget(QDialog):
 
         layout.addLayout(hlayout)
         
-        errorEstGroupBox.setLayout(layout)
-        return errorEstGroupBox
+        #errorEstGroupBox.setLayout(layout)
+        return layout
 
     def compute(self):
-        #try:
+        try:
             number = float(self.dataTextBox.text())
             if self.detNumIntRadioButton.isChecked():
                 self.cpd = CalculatePDialog(self.model, number)
             elif self.estNextMRadioButton.isChecked():
                 print("calculate M")
                 self.cmd = CalculateMDialog(self.model, number)
-        #except Exception:
+        except Exception:
             
-        #    QMessageBox.about(self, 'Error','Input can only be a number')
-        #    pass
+            QMessageBox.about(self, 'Error','Input can only be a number')
+            pass
     
     def genButtonLayout(self):
         buttonLayout = QHBoxLayout()
         
-        cumuCurveButton = QPushButton('Cumulative Curve')
-        buttonLayout.addWidget(cumuCurveButton)
-        cumuCurveButton.clicked.connect(self.genCumuCurve)
-        
-        inciCurveButton = QPushButton('Incidence Curve')
-        buttonLayout.addWidget(inciCurveButton)
-        inciCurveButton.clicked.connect(self.genInciCurve)
-
-        dataSheetButton = QPushButton('Data Sheet')
-        buttonLayout.addWidget(dataSheetButton)
-        dataSheetButton.clicked.connect(self.genDataSheet)
-
-        cancelButton = QPushButton('Cancel')
+        cancelButton = QPushButton('Close')
         buttonLayout.addWidget(cancelButton)
         cancelButton.clicked.connect(self.close)
         return buttonLayout
     
     def genCumuCurve(self):
-        plt.plot(self.model.tVec, self.model.kVec_cumu_sum, 'b', label="Actual")
-        plt.plot(self.model.tVec, self.model.MVF_vals, 'r', label="Estimated")
+        fig = plt.figure()
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
            ncol=2, mode="expand", borderaxespad=0.)
-        plt.xlabel("Intervals")
-        plt.ylabel("Errors")
-        plt.grid(True)
-        #mngr = plt.get_current_fig_manager()
-        #mngr.move(400,400)
-        plt.show()
+        plt.tight_layout()
+        canvas = FigureCanvas(fig)
+        toolbar = NavigationToolbar(canvas, self)
+        ax1 = fig.add_subplot(111)
+        ax1.plot(self.model.tVec, self.model.kVec_cumu_sum, 'b', label="Actual")
+        ax1.plot(self.model.tVec, self.model.MVF_vals, 'r', label="Estimated")
+        ax1.set_xlabel("Intervals")
+        ax1.set_ylabel("Errors")
+        ax1.set_title("Cumulative Curve")
+        ax1.legend()
+        canvas.draw()
+        layoutfig = QVBoxLayout()
+        layoutfig.addWidget(toolbar)
+        layoutfig.addWidget(canvas, 1)
+        return layoutfig
+
 
 
     def genInciCurve(self):
-        plt.plot(self.model.tVec, self.model.kVec, 'b', label="Actual")
-        plt.plot(self.model.tVec, self.model.FI_vals, 'r', label="Estimated")
+        fig = plt.figure()
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
            ncol=2, mode="expand", borderaxespad=0.)
-        plt.xlabel("Intervals")
-        plt.ylabel("Errors")
+        plt.tight_layout()
         plt.grid(True)
-        plt.show()
+        canvas = FigureCanvas(fig)
+        toolbar = NavigationToolbar(canvas, self)
+        ax1 = fig.add_subplot(111)
+        ax1.bar([i-0.2 for i in self.model.tVec], self.model.kVec, width=0.4, color='b', label="Actual")
+        ax1.bar([i+0.2 for i in self.model.tVec], self.model.FI_vals, width=0.4, color='r', label="Estimated")
+        ax1.set_xlabel("Intervals")
+        ax1.set_ylabel("Errors")
+        ax1.set_title("Incidence Curve")
+        ax1.legend()
+        canvas.draw()
+        layoutfig = QVBoxLayout()
+        layoutfig.addWidget(toolbar)
+        layoutfig.addWidget(canvas, 1)
+        return layoutfig
+
+
 
     def genDataSheet(self):
-        self.dsDialog = DataSheetDialog(self.model)
-
-class DataSheetDialog(QDialog):
-    def __init__(self, model, parent=None):
-        super(DataSheetDialog, self).__init__(parent)
-        self.model = model
-        layout = QVBoxLayout(self)
-
-        self.errorsToDate = QLabel()
-        self.errorsToDate.setText("<b>Errors discovered to date:</b> {}".format(self.model.total_failures))
-        self.totalProjected = QLabel()
-        self.totalProjected.setText("<b>Total errors projected:</b> {}".format(self.model.a_est))
-        self.percentOfErrors = QLabel()
-        self.percentOfErrors.setText("<b>Percentage of projected errors found to date:</b> {}".format(100.0*self.model.total_failures/self.model.a_est))
-        self.estPeakLocation = QLabel()
-        self.estPeakLocation.setText("<b>Estimated location of peak:</b> {} ".format(self.model.get_peak_loc()+1)) #Added 1 because of Python 0 indexing
-
-        layout.addWidget(self.errorsToDate)
-        layout.addWidget(self.totalProjected)
-        layout.addWidget(self.percentOfErrors)
-        layout.addWidget(self.estPeakLocation)
-
+        layout = QVBoxLayout()
         self.tableWidget = QTableWidget()
         self.tableWidget.setRowCount(self.model.n)
         self.tableWidget.setColumnCount(10)
@@ -203,17 +225,12 @@ class DataSheetDialog(QDialog):
         layout.addWidget(buttons)
 
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.setWindowTitle("Time Based Model Output Data Sheet")
-        self.setGeometry(400, 400, 1000, 600)
-        self.show()
+        return layout
 
     def populateTable(self):
         data = [self.model.tVec, self.model.kVec, self.model.MVF_vals, self.model.error_delta, \
                     self.model.rel_delta, self.model.kVec_cumu_sum, self.model.kVec_cumu_sum, \
                     self.model.MVF_cumu_sum, self.model.cumu_delta, self.model.cumu_rel_delta]
-        
-        
-
         for row in range(len(self.model.tVec)):
             tableItemRow = [QTableWidgetItem() for i in range(10)]
             for col in range(10):
@@ -229,8 +246,8 @@ class DataSheetDialog(QDialog):
     def getTableData(self):
         #Labels defined again to remove new line characters from the titles
         tableLabels = ['Interval','Actual Error', 'Estimated Error', \
-                                    'Error Delta', 'Relative Data', 'Cumulative % of E', 'Actual Cumulation', \
-                                     'Estimated Cumulation', 'Cumulation Delta', 'Relative Delta']
+                        'Error Delta', 'Relative Data', 'Cumulative % of E', 'Actual Cumulation', \
+                            'Estimated Cumulation', 'Cumulation Delta', 'Relative Delta']
         data = [tableLabels]
         for i in range(self.tableWidget.rowCount()):
             row = []
@@ -239,7 +256,6 @@ class DataSheetDialog(QDialog):
             data.append(row)
         #print(data)
         return data
-
 
 
 class CalculateMDialog(QDialog):

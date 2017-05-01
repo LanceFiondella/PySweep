@@ -16,11 +16,12 @@ class ModeTabWidget(QWidget):
     """
     This class describes the placement of widgets in the Mode 1 tab
     """
-    def __init__(self):
+    def __init__(self, globalData):
         super().__init__()
         
         self.tVec = []
         self.kVec = []
+        self.globalData = globalData
 
         #self.layout = QHBoxLayout(self)
         layout = QGridLayout(self)
@@ -36,7 +37,7 @@ class ModeTabWidget(QWidget):
 
         self.buttonPanel = QVBoxLayout()
         self.buttonPanel.addWidget(self.addDataButtons())
-        self.buttonPanel.addWidget(self.addExternalDataButtons())
+        #self.buttonPanel.addWidget(self.addExternalDataButtons())
         self.buttonPanel.addWidget(self.addComputationButtons())
         layout.addLayout(self.buttonPanel,1,2)
 
@@ -130,6 +131,7 @@ class ModeTabWidget(QWidget):
     def importData(self):
         fileName = QFileDialog.getOpenFileName(self, 'Open File','.')
         data = utils.import_data(fileName)
+        self.setGlobalData(data)
         self.populateTable(data)
         
 
@@ -137,18 +139,7 @@ class ModeTabWidget(QWidget):
         print("Please override this function to set the global data for the particular mode")
         self.globalData.input[self.modex] = data
 
-    def populateTable(self, data):
-        self.setGlobalData(data)
-        self.tableWidget.setRowCount(len(data))
-        for i in range(len(data)):
-            tVec = QTableWidgetItem()
-            kVec = QTableWidgetItem()
-            tVec.setText(data[i][0])
-            kVec.setText(data[i][1])
-            self.tableWidget.setItem(i,0,tVec)
-            self.tableWidget.setItem(i,1,kVec)
-
-
+    
     def clearRows(self):
         d = QDialog()
         buttons = QDialogButtonBox(
