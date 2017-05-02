@@ -13,6 +13,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 from gui.mode2 import ComputeWidget
+import math
+import numpy as np
 
 class Mode3TabWidget(ModeTabWidget):
     def __init__(self, globalData):
@@ -37,38 +39,64 @@ class Mode3TabWidget(ModeTabWidget):
         elif max(self.phaseValues) > len(self.globalData.input['mode1']['tVec']):
             QMessageBox.about(self, 'Error','Phase Values do not total to length of input in Phases')
         elif 'mode2' in self.globalData.output.keys() and self.globalData.input['mode2']['values'] == self.globalData.input['mode3']['values']:
-            print("Mode 3 same as Mode 2, taking results from mode 2")
+            #print("Mode 3 same as Mode 2, taking results from mode 2")
             self.computeMode3(self.globalData.output['mode2'])
+        elif 'mode3' in self.globalData.output.keys():          
+            self.computeMode3(self.globalData.output['mode3'])
         else:
             totalKVec = self.globalData.input['mode1']['kVec']
             totalTVec = self.globalData.input['mode1']['tVec']
 
             self.cw = ComputeWidget(totalTVec, totalKVec, self.phaseValues)
+
             self.cw.results.connect(self.computeMode3)
         
     def computeMode3(self, models):
+        self.models = models
         self.upper = []
         self.lower = []
         self.nom = []
         for i in range(len(models)):
-            if i > -1:
-                j = i + 1
-                #a = models[i].a_est
-                a = float(self.estTotalInjErrors.text())
-                b = models[i].b_est
-                c = models[i].c_est
-                Gt = models[i].MVF(a, b, c, j-1) - models[i].MVF(a, b, c, j)
-                Ut = Gt * (1 + 0.01 * float(self.upperTol.text()))
-                Lt = Gt * (1 + 0.01 * float(self.lowerTol.text()))
-                self.nom.append(Gt)
-                self.upper.append(Ut)
-                self.lower.append(Lt)
+            t = i + 1
+            a = models[i].a_est
+            #a = float(self.estTotalInjErrors.text())
+            b = models[i].b_est
+            c = models[i].c_est
+            Gt = models[i].MVF(t, a, b, c) - models[i].MVF(t-1, a, b, c)
+            self.nom.append(Gt)
+            
+
+            if self.isfloat(self.sigToNoise.text()):
+                print("Found signal to noise!")
+                snr = float(self.sigToNoise.text())
+                if snr >= 1:
+                    Ut = ((snr + 1)/snr)*self.nom[-1]
+                    Lt = ((snr - 1)/snr)*self.nom[-1]
+                else:
+                    utol = 100/snr
+                    ltol = 100/snr
+                    Ut = Gt * (1 + 0.01 * utol)
+                    Lt = Gt * (1 - 0.01 * ltol)    
+            elif self.isfloat(self.upperTol.text()) and self.isfloat(self.lowerTol.text()):
+                utol = float(self.upperTol.text())
+                ltol = float(self.lowerTol.text())
+                Ut = Gt * (1 + 0.01 * utol)
+                Lt = Gt * (1 - 0.01 * ltol)
+            self.upper.append(Ut)
+            self.lower.append(Lt)
         print(self.nom)
         self.results = {'upper':self.upper, 'lower':self.lower, 'nominal':self.nom}
         self.saveAndDisplayResults()
 
+    def isfloat(self, value):
+        try:
+            value = float(value)
+            return True
+        except ValueError:
+            return False
 
     def saveAndDisplayResults(self):
+        self.globalData.output['mode3'] = self.models
         self.resultWindow = Mode3ResultsWidget(self.results, self.phaseNames)
     
     def populateTable(self):
@@ -91,6 +119,7 @@ class Mode3TabWidget(ModeTabWidget):
         buttonLayout.setAlignment(Qt.AlignHCenter)
         buttons = []
         
+        """
         row1 = QHBoxLayout()
         estTotalInjErrorsLabel = QLabel('Estimated Total Injected Errors :')
         self.estTotalInjErrors = QLineEdit()
@@ -102,7 +131,7 @@ class Mode3TabWidget(ModeTabWidget):
         self.peakLoc = QLineEdit()
         row2.addWidget(peakLocLabel)
         row2.addWidget(self.peakLoc)
-
+        """
         row3 = QHBoxLayout()
         upperTolLabel = QLabel('Upper Tolerance (%) :')
         self.upperTol = QLineEdit()
@@ -121,8 +150,8 @@ class Mode3TabWidget(ModeTabWidget):
         row5.addWidget(sigToNoiseLabel)
         row5.addWidget(self.sigToNoise)
 
-        buttonLayout.addLayout(row1)
-        buttonLayout.addLayout(row2)
+        #buttonLayout.addLayout(row1)
+        #buttonLayout.addLayout(row2)
         buttonLayout.addLayout(row3)
         buttonLayout.addLayout(row4)
         buttonLayout.addLayout(row5)
@@ -153,13 +182,17 @@ class Mode3ResultsWidget(QWidget):
     
     def resultPlot(self):
         fig = plt.figure()
+        plt.tight_layout()
+        plt.grid(True)
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
         ax = fig.add_subplot(111)
         ax.set_xticklabels([""] + self.phaseNames)
-        ax.bar([i+1-0.2 for i in range(len(self.phaseNames))], self.results['lower'], width=0.2, color='b', label="Lower")
-        ax.bar([i+1 for i in range(len(self.phaseNames))], self.results['nominal'], width=0.2, color='r', label="Nominal")
-        ax.bar([i+1+0.2 for i in range(len(self.phaseNames))], self.results['upper'], width=0.2, color='g', label="Upper")
+        print(self.results['lower'])
+        print(self.results['upper'])
+        ax.bar([i+1-0.2 for i in range(len(self.phaseNames))], self.results['lower'], width=0.2, color='g', label="Lower")
+        ax.bar([i+1 for i in range(len(self.phaseNames))], self.results['nominal'], width=0.2, color='b', label="Nominal")
+        ax.bar([i+1+0.2 for i in range(len(self.phaseNames))], self.results['upper'], width=0.2, color='r', label="Upper")
         
         ax.set_xlabel("Phases")
         ax.set_ylabel("Errors")

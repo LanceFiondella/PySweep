@@ -66,29 +66,41 @@ class GlobalData():
                     self.input['mode1']['tVec'] = []
                     self.input['mode1']['kVec'] = []
                     for row in worksheet.rows:
-                        self.input['mode1']['tVec'].append(int(row[0].value))
-                        self.input['mode1']['kVec'].append(int(row[1].value))
+                        try:
+                            self.input['mode1']['tVec'].append(int(row[0].value))
+                            self.input['mode1']['kVec'].append(int(row[1].value))
+                        except:
+                            pass
                 elif "mode2" in name.lower():
                     self.input['mode2'] = {}
                     self.input['mode2']['names'] = []
                     self.input['mode2']['values'] = []
                     for row in worksheet.rows:
-                        self.input['mode2']['names'].append(row[0].value)
-                        self.input['mode2']['values'].append(int(row[1].value))
+                        try:
+                            self.input['mode2']['values'].append(int(row[1].value))
+                            self.input['mode2']['names'].append(row[0].value)
+                        except:
+                            pass
                 elif "mode3" in name.lower():
                     self.input['mode3'] = {}
                     self.input['mode3']['names'] = []
                     self.input['mode3']['values'] = []
                     for row in worksheet.rows:
-                        self.input['mode3']['names'].append(row[0].value)
-                        self.input['mode3']['values'].append(int(row[1].value))
+                        try:
+                            self.input['mode3']['values'].append(int(row[1].value))
+                            self.input['mode3']['names'].append(row[0].value)
+                        except:
+                            pass
                 elif "mode4" in name.lower():
                     self.input['mode4'] = {}
                     self.input['mode4']['names'] = []
                     self.input['mode4']['values'] = []
                     for row in worksheet.rows:
-                        self.input['mode4']['names'].append(row[0].value)
-                        self.input['mode4']['values'].append(float(row[1].value))
+                        try:
+                            self.input['mode4']['values'].append(float(row[1].value))
+                            self.input['mode4']['names'].append(row[0].value)
+                        except:
+                            pass
                     
 
 

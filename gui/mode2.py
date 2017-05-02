@@ -35,10 +35,11 @@ class Mode2TabWidget(ModeTabWidget):
             QMessageBox.about(self, 'Error','No data found in table. Please add a dataset')
         elif max(self.phaseValues) > len(self.globalData.input['mode1']['tVec']):
             QMessageBox.about(self, 'Error','Phase Values do not total to length of input in Phase 1')
+        elif 'mode2' in self.globalData.output.keys():
+            self.saveAndDisplayResults(self.globalData.output['mode2'])
         else:
             totalKVec = self.globalData.input['mode1']['kVec']
             totalTVec = self.globalData.input['mode1']['tVec']
-
             self.cw = ComputeWidget(totalTVec, totalKVec, self.phaseValues)
             self.cw.results.connect(self.saveAndDisplayResults)
             
@@ -53,6 +54,7 @@ class Mode2TabWidget(ModeTabWidget):
         col1Name = 'names'
         col2Name = 'values'
         data = self.globalData.input[self.modex]
+        print(data)
         self.tableWidget.setRowCount(len(data[col1Name]))
         for i in range(len(data[col1Name])):
             tVec = QTableWidgetItem()
@@ -93,6 +95,8 @@ class Mode2ResultsWidget(QWidget):
         ax.set_title("Error Discovery Data and Fitted Histograms")
         ax.legend()
         canvas.draw()
+        plt.tight_layout()
+        plt.grid(True)
 
         layoutfig = QVBoxLayout()
         layoutfig.addWidget(toolbar)
