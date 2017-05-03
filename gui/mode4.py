@@ -187,7 +187,7 @@ class Mode4ResultsDialog(QDialog):
     def genRightPlot(self):
         #Figure definition
         fig2 = plt.figure()
-        plt.tight_layout()
+        #plt.tight_layout()
         plt.grid(True)
         canvas2 = FigureCanvas(fig2)
         toolbar2 = NavigationToolbar(canvas2, self)
@@ -226,7 +226,7 @@ class Mode4ResultsDialog(QDialog):
     def genLeftPlot(self):
         #figure def
         fig = plt.figure()
-        plt.tight_layout()
+        #plt.tight_layout()
         plt.grid(True)
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
@@ -264,7 +264,7 @@ class Mode4ResultsDialog(QDialog):
 
     def genLeakageRatePlot(self):
         fig = plt.figure()
-        plt.tight_layout()
+        #plt.tight_layout()
         plt.grid(True)
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)

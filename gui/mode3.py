@@ -182,7 +182,7 @@ class Mode3ResultsWidget(QWidget):
     
     def resultPlot(self):
         fig = plt.figure()
-        plt.tight_layout()
+        #plt.tight_layout()
         plt.grid(True)
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
