@@ -14,9 +14,9 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 from gui.mode_template import ModeTabWidget
 if np.finfo(np.longdouble).eps < np.finfo(np.float64).eps:
-    from core.models import WeibullNumPy as Weibull
+    from core.models import WeibullNumpy as Weibull
 else:
-    from core.models import WeibullMP as Weibull
+    from core.models import WeibullNumpy as Weibull
 
 
 class Mode4TabWidget(ModeTabWidget):
@@ -53,9 +53,14 @@ class Mode4TabWidget(ModeTabWidget):
     def compute(self):
         data = {}
         data['dp'] = self.getTableData()
-        data['ld'] = self.latentErrorBox.text()
-        di = defect_injection.DefectInjection(data)
-        self.resultDialog = Mode4ResultsDialog(di)
+        try:
+            data['ld'] = float(self.latentErrorBox.text())
+            di = defect_injection.DefectInjection(data)
+            self.resultDialog = Mode4ResultsDialog(di)
+        except:
+            QMessageBox.about(self, 'Error','Invalid or missing Lantent Error value')
+        
+        
         print("Compute!")
 
     def getTableData(self):
