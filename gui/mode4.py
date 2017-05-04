@@ -13,10 +13,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 from gui.mode_template import ModeTabWidget
-if np.finfo(np.longdouble).eps < np.finfo(np.float64).eps:
-    from core.models import WeibullNumpy as Weibull
-else:
-    from core.models import WeibullNumpy as Weibull
+from core.models import WeibullNumpy as Weibull
 
 
 class Mode4TabWidget(ModeTabWidget):

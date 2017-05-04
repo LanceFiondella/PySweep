@@ -1,6 +1,6 @@
 from mpmath import mp, fsum, log, factorial, exp, findroot, mpmathify, power
 import numpy as np
-import scipy
+import scipy.misc
 from scipy.optimize import fsolve, root, ridder
 import itertools
 import math
@@ -91,7 +91,7 @@ class WeibullNumpy():
         
         for i in range(self.kVec_len):
             sum_kveci_loga += self.kVec[i] * np.log(a)
-            sum_log_kveci_fac += np.log(scipy.misc.factorial(self.kVec[i]))
+            sum_log_kveci_fac += np.log(scipy.misc.factorial(int(self.kVec[i])))
             if i > 0:
                 sum_kveci_logexp += self.kVec[i] * self.log_diff(i, b, c)
                 

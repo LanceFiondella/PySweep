@@ -14,10 +14,7 @@ from gui.mode_template import ModeTabWidget
 from core import utils
 import numpy as np
 #Check if float128 is available. If it is, use WeibullNumPy else use WeibullMP
-if np.finfo(np.longdouble).eps < np.finfo(np.float64).eps:
-    from core.models import WeibullNumPy as Weibull
-else:
-    from core.models import WeibullNumpy as Weibull
+from core.models import WeibullNumpy as Weibull
 
 class Mode1TabWidget(ModeTabWidget):
     def __init__(self, globalData):

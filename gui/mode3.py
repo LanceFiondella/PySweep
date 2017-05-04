@@ -13,10 +13,7 @@ import matplotlib.pyplot as plt
 from gui.mode2 import ComputeWidget
 import math
 import numpy as np
-if np.finfo(np.longdouble).eps < np.finfo(np.float64).eps:
-    from core.models import WeibullNumpy as Weibull
-else:
-    from core.models import WeibullNumpy as Weibull
+from core.models import WeibullNumpy as Weibull
 
 class Mode3TabWidget(ModeTabWidget):
     def __init__(self, globalData):
