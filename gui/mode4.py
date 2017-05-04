@@ -9,11 +9,15 @@ import sys, math
 import matplotlib
 import numpy as np
 matplotlib.use('QT5Agg')
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 from gui.mode_template import ModeTabWidget
+if np.finfo(np.longdouble).eps < np.finfo(np.float64).eps:
+    from core.models import WeibullNumPy as Weibull
+else:
+    from core.models import WeibullMP as Weibull
+
 
 class Mode4TabWidget(ModeTabWidget):
     def __init__(self, globalData):

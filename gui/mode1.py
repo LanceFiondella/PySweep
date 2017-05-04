@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout,\
     QLabel, QProgressBar, QRadioButton, QLineEdit, QMessageBox, QAbstractItemView, QTabWidget
 from PyQt5.QtCore import Qt
 import PyQt5
-from core import utils, models
 import sys, math
 import matplotlib
 matplotlib.use('QT5Agg')
@@ -12,6 +11,13 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from gui.mode_template import ModeTabWidget
+from core import utils
+import numpy as np
+#Check if float128 is available. If it is, use WeibullNumPy else use WeibullMP
+if np.finfo(np.longdouble).eps < np.finfo(np.float64).eps:
+    from core.models import WeibullNumPy as Weibull
+else:
+    from core.models import WeibullMP as Weibull
 
 class Mode1TabWidget(ModeTabWidget):
     def __init__(self, globalData):
@@ -234,7 +240,8 @@ class Mode1ResultsWidget(QDialog):
         for row in range(len(self.model.tVec)):
             tableItemRow = [QTableWidgetItem() for i in range(10)]
             for col in range(10):
-                tableItemRow[col].setText('{:.4f}'.format(data[col][row]))
+                #tableItemRow[col].setText('{:.4f}'.format(data[col][row]))
+                tableItemRow[col].setText('{}'.format(data[col][row]))
                 self.tableWidget.setItem(row, col, tableItemRow[col])
 
     def saveData(self):
@@ -383,7 +390,7 @@ class CalculatePDialog(QDialog):
         self.intervalsRemain = self.intervals - self.model.n
 
 class ComputeWidget(QWidget):
-    results = PyQt5.QtCore.pyqtSignal(models.Weibull)
+    results = PyQt5.QtCore.pyqtSignal(Weibull)
     def __init__(self, tVec, kVec, parent=None):
         super(ComputeWidget, self).__init__(parent)
         layout = QVBoxLayout(self)
@@ -415,12 +422,12 @@ class ComputeWidget(QWidget):
 
 
 class TaskThread(PyQt5.QtCore.QThread):
-    taskFinished = PyQt5.QtCore.pyqtSignal(models.Weibull)
+    taskFinished = PyQt5.QtCore.pyqtSignal(Weibull)
     def __init__(self, tVec, kVec):
         super().__init__()
         self.tVec = tVec
         self.kVec = kVec
 
     def run(self):
-        w = models.Weibull(self.kVec, self.tVec)
+        w = Weibull(self.kVec, self.tVec)
         self.taskFinished.emit(w)  
