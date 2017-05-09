@@ -118,7 +118,31 @@ class Mode1ResultsWidget(QDialog):
     
     def genErrorEstLayout(self):
         #errorEstGroupBox = QGroupBox("Error Estimate Selection", self)
+        
+        intervalErrorGroupBox = QGroupBox("Estimated Errors based on Intervals Entered (n)", self)
         layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignTop)
+        noie = QLabel("{} {}".format("<b>Number of intervals entered:</b>",self.model.n))
+        noie.setAlignment(Qt.AlignCenter)
+        tedtd = QLabel("{} {}".format("<b>Total Errors Discovered to Date:</b>", self.model.total_failures))
+        tedtd.setAlignment(Qt.AlignCenter)
+        tep = QLabel("<b>Total Errors Projected:</b> {0:.4f}".format(self.model.a_est))
+        tep.setAlignment(Qt.AlignCenter)
+        layout.addWidget(noie)
+        layout.addWidget(tedtd)
+        layout.addWidget(tep)
+        
+        resultHBox = QHBoxLayout()
+        resultHBox.addWidget(self.genEstimatedErrorBox())
+        resultHBox.addWidget(self.genPercentErrorBox())
+
+        computeButton = QPushButton("Compute")
+        computeButton.clicked.connect(self.compute)
+        
+        
+        layout.addLayout(resultHBox)
+        layout.addWidget(computeButton, 0, Qt.AlignRight)
+        """
         self.estNextMRadioButton = QRadioButton("Estimate the number of Errors in Next (m) Intervals")
         self.estNextMRadioButton.setChecked(True)
         
@@ -137,28 +161,97 @@ class Mode1ResultsWidget(QDialog):
         hlayout.addWidget(computeButton)
 
         layout.addLayout(hlayout)
-        
-        #errorEstGroupBox.setLayout(layout)
+        """
         return layout
+    
+    def genPercentErrorBox(self):
+        self.percent = 0
+        self.intervalsNeeded = 0
+        self.intervalsRemain = 0
+        percentErrorGroupBox = QGroupBox("Estimated Errors based on Percentage (p)", self)
+        layout = QVBoxLayout()
+        label = QLabel("Enter Data (p) : ")
+        self.dataTextBoxP = QLineEdit()
+        self.pefe = QLabel("<b>Percentage (p) entered for estimate:</b> {}".format(self.percent))
+        self.intap = QLabel("<b>Intervals needed to achieve p:</b> {0:.4f}".format(self.intervalsNeeded))
+        self.irantap = QLabel("<b>Intervals remaining after n needed to achieve p:</b> {0:10.4f}".format(self.intervalsRemain))
+        layout.addWidget(label)
+        layout.addWidget(self.dataTextBoxP)
+        layout.addWidget(self.pefe)
+        layout.addWidget(self.intap)
+        layout.addWidget(self.irantap)
+        percentErrorGroupBox.setLayout(layout)
+        return percentErrorGroupBox
+
+    def genEstimatedErrorBox(self):
+        self.intervals = 0
+        percentErrorGroupBox = QGroupBox("Estimated Total Errors based on Intervals through m (n+m)", self)
+        layout = QVBoxLayout()
+        label = QLabel("Enter Data (m) : ")
+        self.dataTextBoxM = QLineEdit()
+        #noie = QLabel("<b>Number of Intervals Estimated (m):</b> {}".format(self.intervals))
+        t = self.model.tn + self.intervals
+        a = self.model.a_est
+        b = self.model.b_est
+        c = self.model.c_est
+        self.errorsThroughM = self.model.MVF(t, a, b, c)
+        self.errorsInM = self.errorsThroughM - self.model.total_failures
+        numer = math.log(1 - (99.99 / 100))
+        term = - numer / b
+        self.intervals99 = math.pow(term, 1/c)
+        poped = QLabel("<b>Intervals Needed to Achieve 99.99% of Total Errors:</b> {0:.4f}".format(self.intervals99))
+        self.tedti = QLabel("<b>Total Errors Discovered through Interval (m):</b> {0:.4f}".format(self.errorsThroughM))
+        self.eeimi = QLabel("<b>Estimated Errors in (m) intervals:</b> {0:.4f}".format(self.errorsInM))
+        self.pote =  QLabel("<b>Percentage of Total Errors:</b> {0:.4f}".format(100.0* self.errorsThroughM / a))
+        layout.addWidget(label)
+        layout.addWidget(self.dataTextBoxM)
+        layout.addWidget(poped)
+        layout.addWidget(self.tedti)
+        layout.addWidget(self.eeimi)
+        layout.addWidget(self.pote)
+        percentErrorGroupBox.setLayout(layout)
+        return percentErrorGroupBox
 
     def compute(self):
-        try:
-            number = float(self.dataTextBox.text())
-            if self.detNumIntRadioButton.isChecked():
-                self.cpd = CalculatePDialog(self.model, number)
-            elif self.estNextMRadioButton.isChecked():
-                print("calculate M")
-                self.cmd = CalculateMDialog(self.model, number)
-        except Exception:
+        if self.isFloat(self.dataTextBoxM.text()) == False and self.isFloat(self.dataTextBoxP.text())==False:
+            QMessageBox.about(self, 'Error','Please enter a valid input')
+
+        if self.isFloat(self.dataTextBoxM.text()):
+
+            self.intervals = float(self.dataTextBoxM.text())
+            t = self.model.tn + self.intervals
+            a = self.model.a_est
+            b = self.model.b_est
+            c = self.model.c_est
+            self.errorsThroughM = self.model.MVF(t, a, b, c)
+            self.errorsInM = self.errorsThroughM - self.model.total_failures
+            self.tedti.setText("<b>Total Errors Discovered through Interval (m):</b> {0:.4f}".format(self.errorsThroughM))
+            self.eeimi.setText("<b>Estimated Errors in (m) intervals:</b> {0:.4f}".format(self.errorsInM))
+            self.pote.setText("<b>Percentage of Total Errors:</b> {0:.4f}".format(100.0* self.errorsThroughM / a))
             
-            QMessageBox.about(self, 'Error','Input can only be a number')
-            pass
-    
+        
+        if self.isFloat(self.dataTextBoxP.text()):
+            self.percent = float(self.dataTextBoxP.text())
+            numer = math.log(1 - (self.percent / 100))
+            term = - numer / self.model.b_est
+            self.intervalsNeeded = math.pow(term, 1/self.model.c_est)
+            self.intervalsRemain = self.intervalsNeeded - self.model.n
+            self.pefe.setText("<b>Percentage (p) entered for estimate:</b> {}".format(self.percent))
+            self.intap.setText("<b>Intervals needed to achieve p:</b> {0:.4f}".format(self.intervalsNeeded))
+            self.irantap.setText("<b>Intervals remaining after n needed to achieve p:</b> {0:10.4f}".format(self.intervalsRemain))
+        
+    def isFloat(self, text):
+        try:
+            result = float(text)
+            return True
+        except:
+            return False
+        
     def genButtonLayout(self):
         buttonLayout = QHBoxLayout()
         
         cancelButton = QPushButton('Close')
-        buttonLayout.addWidget(cancelButton)
+        buttonLayout.addWidget(cancelButton, 0, Qt.AlignRight)
         cancelButton.clicked.connect(self.close)
         return buttonLayout
     
@@ -193,8 +286,9 @@ class Mode1ResultsWidget(QDialog):
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
         ax1 = fig.add_subplot(111)
-        ax1.bar([i-0.2 for i in self.model.tVec], self.model.kVec, width=0.4, color='b', label="Actual")
-        ax1.bar([i+0.2 for i in self.model.tVec], self.model.FI_vals, width=0.4, color='r', label="Estimated")
+        ax1.bar([i for i in self.model.tVec], self.model.kVec, width=0.4, color='b', label="Actual")
+        #ax1.bar([i+0.2 for i in self.model.tVec], self.model.FI_vals, width=0.4, color='r', label="Estimated")
+        ax1.plot([0]+self.model.FI_vals, color='r', label='Estimated')      #Added [0] to the begining of FI_vals because vector starts from 1 not 0
         ax1.set_xlabel("Intervals")
         ax1.set_ylabel("Errors")
         ax1.set_title("Incidence Curve")
@@ -220,7 +314,6 @@ class Mode1ResultsWidget(QDialog):
         layout.addWidget(self.tableWidget)
         
         buttons = QDialogButtonBox(
-                        QDialogButtonBox.Close,
                         Qt.Horizontal, self)
         buttons.accepted.connect(self.saveData)
         buttons.rejected.connect(self.reject)
