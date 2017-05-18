@@ -2,7 +2,7 @@ import numpy as np
 
 class DefectInjection():
     def __init__(self, data):
-        self.detection_profile = np.array(data['dp']['data'])
+        self.detection_profile = np.array(data['dp']['values'])
         self.names = data['dp']['names']
         self.latent_defects = float(data['ld'])
         self.num_phases = np.size(self.detection_profile)

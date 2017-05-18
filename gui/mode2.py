@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout,\
     QLabel, QProgressBar, QRadioButton, QLineEdit, QMessageBox, QAbstractItemView
 from PyQt5.QtCore import Qt
 import PyQt5
+import sys
 import matplotlib
 matplotlib.use('QT5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -19,6 +20,8 @@ class Mode2TabWidget(ModeTabWidget):
         self.globalData = globalData
         self.modex = 'mode2'
         self.tableWidget.setHorizontalHeaderLabels(['Phase Name','Data Points'])
+        self.tableWidget.cellChanged.connect(self.tableChanged)
+        self.dataChanged = False
         
     def setGlobalData(self, data):
         self.phaseNames = [a for a,b in data]
@@ -35,9 +38,10 @@ class Mode2TabWidget(ModeTabWidget):
             QMessageBox.about(self, 'Error','No data found in table. Please add a dataset')
         elif max(self.phaseValues) > len(self.globalData.input['mode1']['tVec']):
             QMessageBox.about(self, 'Error','Phase Values do not total to length of input in Phase 1')
-        elif 'mode2' in self.globalData.output.keys():
+        elif 'mode2' in self.globalData.output.keys() and self.dataChanged == False:
             self.saveAndDisplayResults(self.globalData.output['mode2'])
         else:
+            self.dataChanged = False
             totalKVec = self.globalData.input['mode1']['kVec']
             totalTVec = self.globalData.input['mode1']['tVec']
             self.cw = ComputeWidget(totalTVec, totalKVec, self.phaseValues)
@@ -63,6 +67,29 @@ class Mode2TabWidget(ModeTabWidget):
             kVec.setText(str(data[col2Name][i]))
             self.tableWidget.setItem(i,0,tVec)
             self.tableWidget.setItem(i,1,kVec)
+
+    def tableChanged(self, x, y):
+        print("Table data changed! at : {}, {}".format(x, y))
+        self.globalData.input[self.modex] = self.getTableData()
+        self.dataChanged = True
+
+    def getTableData(self):
+        data = {}
+        names = []
+        values = []
+        for i in range(self.tableWidget.rowCount()):
+            try:
+                if self.tableWidget.item(i,0) != None and self.tableWidget.item(i,1) != None:
+                    names.append(self.tableWidget.item(i,0).text())
+                    values.append(int(self.tableWidget.item(i,1).text()))
+                    #data.append((self.tableWidget.item(i,0).text(), float(self.tableWidget.item(i,1).text())))
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+                pass
+        data['names'] = names
+        data['values'] = values
+        print(data)
+        return data
 
 
 class Mode2ResultsWidget(QWidget):

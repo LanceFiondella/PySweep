@@ -22,7 +22,9 @@ class Mode4TabWidget(ModeTabWidget):
         self.globalData = globalData
         self.modex = 'mode4'
         self.tableWidget.setHorizontalHeaderLabels(['Phase Name','Defects Detected/\nKSLOC'])
-    
+        self.tableWidget.cellChanged.connect(self.tableChanged)
+        self.dataChanged = False
+
     def addComputationButtons(self):
         buttonGroupBox = QGroupBox("Computation", self)
         buttonLayout = QVBoxLayout()
@@ -30,16 +32,12 @@ class Mode4TabWidget(ModeTabWidget):
         
         latentErrorLabel = QLabel('Enter Latent Error :')
         self.latentErrorBox = QLineEdit()
-
-
         self.computeButton = QPushButton('Compute')
         self.computeButton.setToolTip('Starts the computation')
         self.computeButton.clicked.connect(self.compute)
         buttons.append(latentErrorLabel)
         buttons.append(self.latentErrorBox)
         buttons.append(self.computeButton)
-        
-
         for button in buttons:
             buttonLayout.addWidget(button)
         
@@ -48,13 +46,17 @@ class Mode4TabWidget(ModeTabWidget):
         return buttonGroupBox
     
     def compute(self):
-        data = {}
-        data['dp'] = self.getTableData()
+        data = self.globalData.input[self.modex]
+        #data['dp'] = self.getTableData()
         try:
-            data['ld'] = float(self.latentErrorBox.text())
-            di = defect_injection.DefectInjection(data)
-            self.resultDialog = Mode4ResultsDialog(di)
+            if self.dataChanged:
+                data['ld'] = float(self.latentErrorBox.text())
+                self.di = defect_injection.DefectInjection(data)
+                self.resultDialog = Mode4ResultsDialog(self.di)
+            else:
+                self.resultDialog = Mode4ResultsDialog(self.di)
         except:
+            print("Unexpected error:", sys.exc_info()[0])
             QMessageBox.about(self, 'Error','Invalid or missing Lantent Error value')
         
         
@@ -71,7 +73,7 @@ class Mode4TabWidget(ModeTabWidget):
             except:
                 print("Unexpected error:", sys.exc_info()[0])
                 raise
-        data = {'data':data, 'names':names}
+        data = {'values':data, 'names':names}
         return data
     
     def populateTable(self):
@@ -88,6 +90,28 @@ class Mode4TabWidget(ModeTabWidget):
             self.tableWidget.setItem(i,0,tVec)
             self.tableWidget.setItem(i,1,kVec)
 
+    def tableChanged(self, x, y):
+        print("Table data changed! at : {}, {}".format(x, y))
+        self.globalData.input[self.modex]['dp'] = self.getTableData()
+        self.dataChanged = True
+
+    def getTableData(self):
+        data = {}
+        names = []
+        values = []
+        for i in range(self.tableWidget.rowCount()):
+            try:
+                if self.tableWidget.item(i,0) != None and self.tableWidget.item(i,1) != None:
+                    names.append(self.tableWidget.item(i,0).text())
+                    values.append(float(self.tableWidget.item(i,1).text()))
+                    #data.append((self.tableWidget.item(i,0).text(), float(self.tableWidget.item(i,1).text())))
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+                pass
+        data['names'] = names
+        data['values'] = values
+        print(data)
+        return data
 
 
 
@@ -182,10 +206,15 @@ class Mode4ResultsDialog(QDialog):
 
     def genDataLabels(self):
         layout = QHBoxLayout()
-        layout.addWidget(QLabel("<h3><b>Total Detected:</b> {:.2f}</h3>".format(self.di.total_defects)))
-        layout.addWidget(QLabel("<h3><b>Total Injected:</b> {:.2f}</h3>".format(self.di.TDI)))
-        layout.addWidget(QLabel("<h3><b>Latent Error:</b> {:.2f}</h3>".format(self.di.latent_defects)))
-        layout.addWidget(QLabel("<h3><b>Peak at Phase:</b> {:.2f}</h3>".format(self.di.profile_peak)))
+        labels = []
+        
+        labels.append(QLabel("<h3><b>Total Detected:</b> {:.2f}</h3>".format(self.di.total_defects)))
+        labels.append(QLabel("<h3><b>Total Injected:</b> {:.2f}</h3>".format(self.di.TDI)))
+        labels.append(QLabel("<h3><b>Latent Error:</b> {:.2f}</h3>".format(self.di.latent_defects)))
+        labels.append(QLabel("<h3><b>Peak at Phase:</b> {:.2f}</h3>".format(self.di.profile_peak)))
+        for label in labels:
+            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            layout.addWidget(label)
         layout.setAlignment(Qt.AlignHCenter)
         layout.setSpacing(20)
         return layout

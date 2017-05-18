@@ -178,7 +178,7 @@ class ModeTabWidget(QWidget):
         for i in range(self.tableWidget.rowCount()):
             try:
                 if self.tableWidget.item(i,0) != None:
-                    data.append((self.tableWidget.item(i,0).text(), self.tableWidget.item(i,1).text()))
+                    data.append((self.tableWidget.item(i,0).text(), float(self.tableWidget.item(i,1).text())))
             except:
                 print("Unexpected error:", sys.exc_info()[0])
                 raise

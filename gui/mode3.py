@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout,\
     QLabel, QProgressBar, QRadioButton, QLineEdit, QMessageBox, QAbstractItemView
 from PyQt5.QtCore import Qt
 import PyQt5
+import sys
 import matplotlib
 matplotlib.use('QT5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -21,6 +22,8 @@ class Mode3TabWidget(ModeTabWidget):
         self.modex = 'mode3'
         self.globalData = globalData
         self.tableWidget.setHorizontalHeaderLabels(['Phase Name','Data Points'])
+        self.tableWidget.cellChanged.connect(self.tableChanged)
+        self.dataChanged = False
         
     def setGlobalData(self, data):
         self.phaseNames = [a for a,b in data]
@@ -40,7 +43,7 @@ class Mode3TabWidget(ModeTabWidget):
         elif 'mode2' in self.globalData.output.keys() and self.globalData.input['mode2']['values'] == self.globalData.input['mode3']['values']:
             #print("Mode 3 same as Mode 2, taking results from mode 2")
             self.computeMode3(self.globalData.output['mode2'])
-        elif 'mode3' in self.globalData.output.keys():          
+        elif 'mode3' in self.globalData.output.keys() and self.dataChanged == False:          
             self.computeMode3(self.globalData.output['mode3'])
         else:
             totalKVec = self.globalData.input['mode1']['kVec']
@@ -66,7 +69,6 @@ class Mode3TabWidget(ModeTabWidget):
             
 
             if self.isfloat(self.sigToNoise.text()):
-                print("Found signal to noise!")
                 snr = float(self.sigToNoise.text())
                 if snr >= 1:
                     Ut = ((snr + 1)/snr)*self.nom[-1]
@@ -117,20 +119,7 @@ class Mode3TabWidget(ModeTabWidget):
         buttonLayout = QVBoxLayout()
         buttonLayout.setAlignment(Qt.AlignHCenter)
         buttons = []
-        
-        """
-        row1 = QHBoxLayout()
-        estTotalInjErrorsLabel = QLabel('Estimated Total Injected Errors :')
-        self.estTotalInjErrors = QLineEdit()
-        row1.addWidget(estTotalInjErrorsLabel)
-        row1.addWidget(self.estTotalInjErrors)
 
-        row2 = QHBoxLayout()
-        peakLocLabel = QLabel('Peak Location (T) :')
-        self.peakLoc = QLineEdit()
-        row2.addWidget(peakLocLabel)
-        row2.addWidget(self.peakLoc)
-        """
         row3 = QHBoxLayout()
         upperTolLabel = QLabel('Upper Tolerance (%) :')
         self.upperTol = QLineEdit()
@@ -169,7 +158,28 @@ class Mode3TabWidget(ModeTabWidget):
         buttonGroupBox.setLayout(buttonLayout)
         return buttonGroupBox
 
+    def tableChanged(self, x, y):
+        print("Table data changed! at : {}, {}".format(x, y))
+        self.globalData.input[self.modex] = self.getTableData()
+        self.dataChanged = True
 
+    def getTableData(self):
+        data = {}
+        names = []
+        values = []
+        for i in range(self.tableWidget.rowCount()):
+            try:
+                if self.tableWidget.item(i,0) != None and self.tableWidget.item(i,1) != None:
+                    names.append(self.tableWidget.item(i,0).text())
+                    values.append(int(self.tableWidget.item(i,1).text()))
+                    #data.append((self.tableWidget.item(i,0).text(), float(self.tableWidget.item(i,1).text())))
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+                pass
+        data['names'] = names
+        data['values'] = values
+        print(data)
+        return data
 
 class Mode3ResultsWidget(QWidget):
     def __init__(self, results, phaseNames, parent=None):
@@ -187,11 +197,12 @@ class Mode3ResultsWidget(QWidget):
         toolbar = NavigationToolbar(canvas, self)
         ax = fig.add_subplot(111)
         ax.set_xticklabels([""] + self.phaseNames)
-        print(self.results['lower'])
-        print(self.results['upper'])
-        ax.bar([i+1-0.2 for i in range(len(self.phaseNames))], self.results['lower'], width=0.2, color='g', label="Lower")
-        ax.bar([i+1 for i in range(len(self.phaseNames))], self.results['nominal'], width=0.2, color='b', label="Nominal")
-        ax.bar([i+1+0.2 for i in range(len(self.phaseNames))], self.results['upper'], width=0.2, color='r', label="Upper")
+        ax.plot(self.results['lower'], color='g', label='Lower')   
+        #ax.bar([i+1-0.2 for i in range(len(self.phaseNames))], self.results['lower'], width=0.2, color='g', label="Lower")
+        ax.plot(self.results['nominal'], color='b', label='Nominal')   
+        #ax.bar([i+1 for i in range(len(self.phaseNames))], self.results['nominal'], width=0.2, color='b', label="Nominal")
+        ax.plot(self.results['upper'], color='r', label='Upper')   
+        #ax.bar([i+1+0.2 for i in range(len(self.phaseNames))], self.results['upper'], width=0.2, color='r', label="Upper")
         
         ax.set_xlabel("Phases")
         ax.set_ylabel("Errors")
