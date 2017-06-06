@@ -102,6 +102,17 @@ class Mode2ResultsWidget(QWidget):
         
 
     def resultPlot(self):
+        labels = []
+        labels.append("<b>Estimated Total Errors:</b> {}".format(self.models[-1].a_est))
+        labels.append("<b>Selected Peak Location:</b> {}".format(self.models[-1].get_peak_loc()+1))
+        a = self.models[-1].a_est
+        b = self.models[-1].b_est
+        c = self.models[-1].c_est
+        t = len(self.phaseNames)
+        l = self.models[-1].fi_t(a, b, c, t)
+        labels.append("<b>Projected Latent Errors:</b> {}".format(l))
+        labels.append("<b>Error Discovery Efficiency:</b> {} ".format((1 - l/self.models[-1].a_est)*100))
+        
         fig = plt.figure()
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
@@ -125,7 +136,13 @@ class Mode2ResultsWidget(QWidget):
         plt.tight_layout()
         plt.grid(True)
 
+
+
         layoutfig = QVBoxLayout()
+        for label in labels:
+            l = QLabel()
+            l.setText(label)
+            layoutfig.addWidget(l)
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
         return layoutfig

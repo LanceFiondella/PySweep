@@ -186,6 +186,8 @@ class Mode3ResultsWidget(QWidget):
         super().__init__()
         self.results = results
         self.phaseNames = phaseNames
+
+        
         self.setLayout(self.resultPlot())
         self.show()
     
@@ -211,6 +213,17 @@ class Mode3ResultsWidget(QWidget):
         canvas.draw()
 
         layoutfig = QVBoxLayout()
+        labels = []
+        labels.append("<b>Number of Phases:</b> {}".format(len(self.phaseNames)))
+        labels.append("<b>Peak Location:</b> {}")
+        labels.append("<b>Total Injected Errors:</b> {}")
+        labels.append("<b>Latent Errors:</b> {}")
+
+        for label in labels:
+            l = QLabel()
+            l.setText(label)
+            layoutfig.addWidget(l)
+
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
         return layoutfig

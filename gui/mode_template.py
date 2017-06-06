@@ -160,12 +160,15 @@ class ModeTabWidget(QWidget):
     
     def deleteRows(self):
         self.tableWidget.removeRow(self.tableWidget.currentRow())
+        self.tableChanged(0, 0)
 
     def addRow(self):
         self.tableWidget.insertRow(self.tableWidget.rowCount())
+        self.tableChanged(0, 0)
 
     def insertRow(self):
         self.tableWidget.insertRow(self.tableWidget.currentRow())
+        self.tableChanged(0, 0)
 
     def saveData(self):
         fileName = QFileDialog.getSaveFileName(self, 'Save Data', '.', initialFilter='*.csv')
