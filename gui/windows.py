@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         self.globalData.import_input_excel(fname[0])
         self.tabs.mode1tab.populateTable()
         self.tabs.mode2tab.populateTable()
-        self.tabs.mode3tab.populateTable()
+        #self.tabs.mode3tab.populateTable()
         self.tabs.mode4tab.populateTable()
         
 
@@ -83,12 +83,12 @@ class TabsWidget(QWidget):
         self.tabWidget = QTabWidget()
         self.mode1tab = mode1.Mode1TabWidget(parent.globalData)
         self.mode2tab = mode2.Mode2TabWidget(parent.globalData)
-        self.mode3tab = mode3.Mode3TabWidget(parent.globalData)
+        #self.mode3tab = mode3.Mode3TabWidget(parent.globalData)
         self.mode4tab = mode4.Mode4TabWidget(parent.globalData)
 
         self.tabWidget.addTab(self.mode1tab, "Mode 1")
-        self.tabWidget.addTab(self.mode2tab, "Mode 2")
-        self.tabWidget.addTab(self.mode3tab, "Mode 3")
+        self.tabWidget.addTab(self.mode2tab, "Mode 2 + Mode 3")
+        #self.tabWidget.addTab(self.mode3tab, "Mode 3")
         self.tabWidget.addTab(self.mode4tab, "Mode 4")
 
         self.layout.addWidget(self.tabWidget)

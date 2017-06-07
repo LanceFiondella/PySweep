@@ -13,6 +13,8 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 import numpy as np
 from core.models import WeibullNumpy as Weibull
+from gui.mode3 import Mode3ResultsWidget
+
 
 class Mode2TabWidget(ModeTabWidget):
     def __init__(self, globalData):
@@ -52,6 +54,8 @@ class Mode2TabWidget(ModeTabWidget):
         print("saving results...  {}".format(len(models)))
         self.globalData.output[self.modex] = models
         self.resultWindow = Mode2ResultsWidget(models, self.phaseNames, self.phaseValues)
+        self.computeMode3(models)
+        self.resultWindow2 = Mode3ResultsWidget(self.results, self.phaseNames)
     
     def populateTable(self):
         #self.setGlobalData(data)
@@ -90,6 +94,93 @@ class Mode2TabWidget(ModeTabWidget):
         data['values'] = values
         print(data)
         return data
+
+    def addComputationButtons(self):
+        buttonGroupBox = QGroupBox("Computation", self)
+        buttonLayout = QVBoxLayout()
+        buttonLayout.setAlignment(Qt.AlignHCenter)
+        buttons = []
+
+        row3 = QHBoxLayout()
+        upperTolLabel = QLabel('Upper Tolerance (%) :')
+        self.upperTol = QLineEdit()
+        row3.addWidget(upperTolLabel)
+        row3.addWidget(self.upperTol)
+
+        row4 = QHBoxLayout()
+        lowerTolLabel = QLabel('Lower Tolerance (%) :')
+        self.lowerTol = QLineEdit()
+        row4.addWidget(lowerTolLabel)
+        row4.addWidget(self.lowerTol)
+
+        row5 = QHBoxLayout()
+        sigToNoiseLabel = QLabel('Signal to Noise Ratio :')
+        self.sigToNoise = QLineEdit()
+        #row5.addWidget(sigToNoiseLabel)
+        #row5.addWidget(self.sigToNoise)
+
+        #buttonLayout.addLayout(row1)
+        #buttonLayout.addLayout(row2)
+        buttonLayout.addLayout(row3)
+        buttonLayout.addLayout(row4)
+        buttonLayout.addLayout(row5)
+
+
+        self.computeButton = QPushButton('Compute')
+        self.computeButton.setToolTip('Starts the computation')
+        self.computeButton.clicked.connect(self.compute)
+        buttons.append(self.computeButton)
+        
+
+        for button in buttons:
+            buttonLayout.addWidget(button)
+        
+        buttonLayout.addStretch(1)
+        buttonGroupBox.setLayout(buttonLayout)
+        return buttonGroupBox
+    
+    def computeMode3(self, models):
+        self.models = models
+        self.upper = []
+        self.lower = []
+        self.nom = []
+        for i in range(len(self.phaseValues)):
+            t = i + 1
+            a = models[-1].a_est
+            #a = float(self.estTotalInjErrors.text())
+            b = models[-1].b_est
+            c = models[-1].c_est
+            Gt = models[-1].MVF(t, a, b, c) - models[-1].MVF(t-1, a, b, c)
+            self.nom.append(Gt)
+            
+
+            if self.isfloat(self.sigToNoise.text()):
+                snr = float(self.sigToNoise.text())
+                if snr >= 1:
+                    Ut = ((snr + 1)/snr)*self.nom[-1]
+                    Lt = ((snr - 1)/snr)*self.nom[-1]
+                else:
+                    utol = 100/snr
+                    ltol = 100/snr
+                    Ut = Gt * (1 + 0.01 * utol)
+                    Lt = Gt * (1 - 0.01 * ltol)    
+            elif self.isfloat(self.upperTol.text()) and self.isfloat(self.lowerTol.text()):
+                utol = float(self.upperTol.text())
+                ltol = float(self.lowerTol.text())
+                Ut = Gt * (1 + 0.01 * utol)
+                Lt = Gt * (1 - 0.01 * ltol)
+            self.upper.append(Ut)
+            self.lower.append(Lt)
+        print(self.nom)
+        self.results = {'upper':self.upper, 'lower':self.lower, 'nominal':self.nom}
+        #self.saveAndDisplayResults()
+
+    def isfloat(self, value):
+        try:
+            value = float(value)
+            return True
+        except ValueError:
+            return False
 
 
 class Mode2ResultsWidget(QWidget):
@@ -132,6 +223,8 @@ class Mode2ResultsWidget(QWidget):
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
         return layoutfig
+
+
     
             
 class ComputeWidget(QWidget):

@@ -11,7 +11,7 @@ matplotlib.use('QT5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-from gui.mode2 import ComputeWidget
+#from gui.mode2 import ComputeWidget
 import math
 import numpy as np
 from core.models import WeibullNumpy as Weibull

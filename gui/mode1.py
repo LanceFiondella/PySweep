@@ -45,6 +45,7 @@ class Mode1TabWidget(ModeTabWidget):
                 #print(tVec, kVec)
                 self.cw = ComputeWidget(self.tVec, self.kVec)
                 self.cw.results.connect(self.saveAndDisplayResults)
+                self.dataChanged = False
             else:
                 self.res = Mode1ResultsWidget(self.model)
     
@@ -178,6 +179,7 @@ class Mode1ResultsWidget(QDialog):
         layout = QVBoxLayout()
         label = QLabel("Enter Data (p) : ")
         self.dataTextBoxP = QLineEdit()
+        self.dataTextBoxP.setText('0')
         self.pefe = QLabel("<b>Percentage (p) entered for estimate:</b> {}".format(self.percent))
         self.intap = QLabel("<b>Intervals needed to achieve p:</b> {0:.4f}".format(self.intervalsNeeded))
         self.irantap = QLabel("<b>Intervals remaining after n needed to achieve p:</b> {0:10.4f}".format(self.intervalsRemain))
@@ -195,6 +197,7 @@ class Mode1ResultsWidget(QDialog):
         layout = QVBoxLayout()
         label = QLabel("Enter Data (m) : ")
         self.dataTextBoxM = QLineEdit()
+        self.dataTextBoxM.setText('1')
         #noie = QLabel("<b>Number of Intervals Estimated (m):</b> {}".format(self.intervals))
         t = self.model.tn + self.intervals
         a = self.model.a_est
@@ -269,7 +272,7 @@ class Mode1ResultsWidget(QDialog):
         toolbar = NavigationToolbar(canvas, self)
         ax1 = fig.add_subplot(111)
         ax1.plot(self.model.tVec, self.model.kVec_cumu_sum, 'b', label="Actual")
-        ax1.plot(self.model.tVec, self.model.MVF_vals, 'r', label="Estimated")
+        ax1.plot(self.model.tVec, self.model.MVF_cumu_vals, 'r', label="Estimated")
         ax1.set_xlabel("Intervals")
         ax1.set_ylabel("Errors")
         ax1.set_title("Cumulative Curve")
@@ -330,7 +333,7 @@ class Mode1ResultsWidget(QDialog):
 
     def populateTable(self):
         data = [self.model.tVec, self.model.kVec, self.model.MVF_vals, self.model.error_delta, \
-                    self.model.rel_delta, self.model.kVec_cumu_sum, self.model.kVec_cumu_sum, \
+                    self.model.rel_delta, self.model.cumu_percent, self.model.kVec_cumu_sum, \
                     self.model.MVF_cumu_sum, self.model.cumu_delta, self.model.cumu_rel_delta]
         for row in range(len(self.model.tVec)):
             tableItemRow = [QTableWidgetItem() for i in range(10)]

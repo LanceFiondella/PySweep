@@ -254,10 +254,15 @@ class WeibullNumpy():
         """
         Calculates MVF values for all tVec. It is assumed that MLEs are calculated.
         """
-        self.MVF_vals = []
-        for t in self.tVec:
-            self.MVF_vals.append(self.MVF(t, self.a_est, self.b_est, self.c_est))
+        self.MVF_vals = [self.MVF(self.tVec[0], self.a_est, self.b_est, self.c_est)]
+        self.MVF_cumu_vals = [self.MVF(self.tVec[0], self.a_est, self.b_est, self.c_est)]
+        for i in range(1,len(self.tVec)):
+            val = self.MVF(self.tVec[i], self.a_est, self.b_est, self.c_est) - self.MVF(self.tVec[i-1], self.a_est, self.b_est, self.c_est) 
+            self.MVF_vals.append(val)
+            self.MVF_cumu_vals.append(self.MVF(self.tVec[i], self.a_est, self.b_est, self.c_est))
         return self.MVF_vals
+
+    
 
     def complete_FI(self):
         """
@@ -290,265 +295,12 @@ class WeibullNumpy():
     def cumu_rel_delta(self):
         return self.cumu_delta * 100 / self.kVec_cumu_sum
 
-class WeibullMP():
-    def __init__(self, kVec, tVec):
-        #self.kVec = [mp.mpf(k) for k in kVec]              #Failure Counts (FC)
-        self.kVec = [float(k) for k in kVec]
-        #self.tVec = [mp.mpf(t) for t in tVec]              #Time interval vector
-        self.tVec = [float(t) for t in tVec]
-        self.kVec_len = len(self.kVec)      #Length of FC
-        self.total_failures = np.sum(self.kVec)   #Sum of all recorded failures
-        self.total_time = np.sum(self.tVec)       #Sum of all time intervals
-        self.tn = self.tVec[-1]                 #Last time interval
-        self.n = len(self.tVec)             #Length of time interval vector
-        self.kVec_cumu_sum = [i for i in itertools.accumulate(self.kVec)]
-        self.ECM()
-        self.complete_MVF()
-        self.complete_FI()
-
-    def ECM(self):
-        """
-        ECM Algorithm implementation
-        """
-        #self.kVecCumul = np.cumsum(self.kVec)
-        #Initial estimates
-        self.arule = [1.0*self.total_failures]
-        self.brule = [1.0*self.total_failures/self.total_time]
-        self.crule = [1.0]
-
-        self.ll_list = [self.logL(self.arule[0], self.brule[0], self.crule[0])]
-        self.ll_error_list = []
-        self.ll_error = 1
-        self.j = 0
-        
-        limits_b = []
-        limits_c = []
-        
-        while(self.ll_error > pow(10,-6)):
-            print("Iteration number : {}".format(self.j))
-            self.a_est = self.aMLE(self.total_failures, self.tn, self.brule[self.j], self.crule[self.j])
-            self.arule.append(self.a_est)
-            #print("Estimated a: {}".format(self.a_est))
-            
-            if self.j == 0:
-                limits_b = self.MLElim(self.bMLE, self.brule[self.j],  c=self.crule[self.j], a=self.arule[self.j+1])    
-            else:
-                limits_b = [self.brule[self.j]/2, self.brule[self.j]*2]
-            
-            self.b_est = findroot(self.bMLE, limits_b, tol=1e-10, solver = 'anderson')
-            #self.b_est = ridder(self.bMLE, limits_b[0], limits_b[1])
-            #self.b_est = findroot(self.bMLE, self.brule[self.j], tol=1e-24, solver = 'halley')
-            #print("Estimated b : {}".format(self.b_est))
-            self.brule.append(self.b_est)
-            
-
-            if self.j == 0:
-                limits_c = self.MLElim(self.cMLE, self.crule[self.j], a=self.arule[self.j+1], b=self.brule[self.j+1])    
-            else:
-                limits_c = [self.crule[self.j]/2, self.crule[self.j]*2]
-            
-            self.c_est = findroot(self.cMLE, limits_c, tol=1e-10, solver = 'anderson')
-            #self.c_est = ridder(self.cMLE, limits_c[0], limits_c[1])
-            #self.c_est = findroot(self.cMLE, self.crule[self.j], tol=1e-24, solver = 'halley')
-            #print("Estimated c : {}".format(self.c_est))
-            self.crule.append(self.c_est)
-            
-
-            self.ll_list.append(self.logL(self.a_est, self.b_est, self.c_est))
-            self.j += 1
-            self.ll_error = self.ll_list[self.j] - self.ll_list[self.j-1]
-            #print("Log Likelihood error = {}".format(self.ll_error))
-            self.ll_error_list.append(self.ll_error)
-            
-            #print("------------------------------------------------------------------------")
-            
-        print(self.ll_list[-1], self.arule[-1], self.brule[-1], self.crule[-1])
-        
-    def logL(self, a, b, c):
-        """
-        Loglikelihood function
-        """
-        sum_kveci_loga = 0
-        sum_kveci_logexp = 0
-        sum_log_kveci_fac = 0
-        
-        for i in range(self.kVec_len):
-            sum_kveci_loga += self.kVec[i] * np.log(a)
-            #num = mp.mpf(str())
-            #fact = factorial(num)
-            sum_log_kveci_fac += log(factorial(self.kVec[i]))
-            if i > 0:
-                #print(self.expo(i-1, b, c) - self.expo(i, b, c))
-                sum_kveci_logexp += self.kVec[i] * log(self.expo(i-1, b, c) - self.expo(i, b, c))
-        
-        #print(sum_kveci_logexp - sum_log_kveci_fac + self.kVec[0] * log(1 - self.expo(0, b, c)))
-        logL = sum_kveci_loga + (self.kVec[0] * log(1 - self.expo(0, b, c))) + sum_kveci_logexp - a * (1 - self.expo(-1, b, c)) - sum_log_kveci_fac
-        return logL
-
-
-
-    def expo(self, x, b, c):
-        """
-        Exponential part = -b * tx^c  
-        """
-        #print(-b * self.tVec[x]**c)
-
-        #return exp(-b * self.tVec[x]**c)
-        return exp(-b * power(self.tVec[x],c))
-
-    def aMLE(self, total_failures, tn, b, c):
-        """
-        Estimation of a
-        """
-        return total_failures/(1 - np.exp(-b *  np.power(tn,c)))
-        
-
-    def bMLE(self, ip, **kwargs):
-        """
-        Estimation of b
-        """
-        b = ip
-        if len(kwargs.keys()) != 0:
-            a = kwargs['a']
-            c = kwargs['c']
-        else: 
-            a = self.arule[self.j+1]
-            c = self.crule[self.j]
-        
-        tVec = self.tVec
-        tn = tVec[-1]
-        sum_k = 0
-        n = np.size(tVec)
-        
-        for i in range(n):
-            if i >0:
-                numer = (pow(self.tVec[i],c) * self.expo(i, b, c) - pow(self.tVec[i-1],c) * self.expo(i-1, b, c))
-                denom = (self.expo(i-1, b, c) - self.expo(i, b, c))
-            else:
-                numer = (pow(self.tVec[i],c) * self.expo(i, b, c))
-                denom = ( 1 - self.expo(i, b, c))
-            sum_k += self.kVec[i] * numer / denom 
-            #print("sumk : {} * {} / {}  ::  b = {}, c = {}".format(self.kVec[i], numer, denom, b, c) )
-
-        bprime = sum_k - a * pow(self.tVec[-1],c) * self.expo(-1, b, c)
-        bprime = b - bprime
-        
-        #print("Bprime : {} - ({} - {}) ".format(b, sum_k, a * self.tVec[-1]**c * self.expo(-1, b, c)))
-        return bprime
-
-    def MLElim(self, func, val, **kwargs):
-        maxIterations = 100
-        leftEndPoint = val / 2
-        #print(args)
-        leftEndPointMLE = func(leftEndPoint, **kwargs)
-        rightEndPoint = 2 * val
-        rightEndPointMLE = func(rightEndPoint, **kwargs)
-        i = 0
-        while(leftEndPointMLE * rightEndPointMLE > 0 & i <= maxIterations):
-            #print(leftEndPoint, rightEndPoint)
-            leftEndPoint = leftEndPoint / 2
-            leftEndPointMLE = func(leftEndPoint, **kwargs)
-            rightEndPoint = 2 * rightEndPoint
-            rightEndPointMLE = func(rightEndPoint, **kwargs)
-            i = i + 1
-        print("Max iterations : " + str(i))
-        return [leftEndPoint, rightEndPoint]
-
-    def cMLE(self, ip, **kwargs):
-        """
-        Estimation of c
-        """
-        c = ip
-        if len(kwargs.keys()) != 0:
-            a = kwargs['a']
-            b = kwargs['b']
-        else:
-            a = self.arule[self.j+1]
-            b = self.brule[self.j+1]
-        tVec = self.tVec
-        tn = tVec[-1]
-        exp_tn = exp(-b * pow(tn,c))
-        n = np.size(tVec)
-        sum_k = 0
-        for i in range(n):
-            tVeci = tVec[i]
-            tVeci1 = tVec[i-1]
-            if i > 0:
-                numer = (pow(tVeci,c) * self.expo(i, b, c) * log(tVeci) - pow(tVeci1,c) * self.expo(i-1, b, c) * log(tVeci1))
-                denom = (self.expo(i-1, b, c) - self.expo(i, b, c))
-            else:
-                numer = (pow(tVeci,c) * self.expo(i, b, c) * log(tVeci))
-                denom = (1 - self.expo(i, b, c))
-            sum_k += self.kVec[i] * b * (numer / denom)
-
-        
-        cprime = sum_k - a * b * pow(self.tn,c) * self.expo(-1, b, c) * log(self.tn)
-        return cprime
-
-    def get_peak_loc(self):
-        max_intensity = float('-inf')
-        max_intensity_index = 0
-        for i in range(len(self.tVec)):
-            fi = self.failure_intensity(self.a_est, self.b_est, self.c_est, i)
-            if fi > max_intensity:
-                max_intensity = fi
-                max_intensity_index = i
-        return max_intensity_index 
-
-    def failure_intensity(self, a, b, c, i):
-        return a * b * c * self.expo(i, b, c) * power(self.tVec[i], c-1)
-
-    def fi_t(self, a, b, c, t):
-        return a * b * c * exp(-b * power(t,c)) * power(t, c-1)
-
-    def MVF(self, t, a, b, c):
-        """
-        MVF value at a single point in time
-        Use completeMVF to get all MVF values
-        """
-        return a * (1 - exp(-b * power(t, c)))
-
-    def complete_MVF(self):
-        """
-        Calculates MVF values for all tVec. It is assumed that MLEs are calculated.
-        """
-        self.MVF_vals = []
-        for t in self.tVec:
-            self.MVF_vals.append(self.MVF(t, self.a_est, self.b_est, self.c_est))
-        return self.MVF_vals
-
-    def complete_FI(self):
-        """
-        Calculates Failure Intensity values for all tVec. It is assumed that MLEs are calculated.
-        """
-        self.FI_vals = []
-        for i in range(len(self.tVec)):
-            self.FI_vals.append(self.failure_intensity(self.a_est, self.b_est, self.c_est, i))
-
     @property
-    def error_delta(self):
-        """
-        Calculates the differene between the actual error and estimated error for each t in tVec
-        """
-        return [self.kVec[i] - self.MVF_vals[i] for i in range(len(self.kVec))]
-
-    @property
-    def rel_delta(self):
-        return [mp.mpf("inf") if self.kVec[i] == 0 else (self.kVec[i] - self.MVF_vals[i]) * 100 / self.kVec[i] for i in range(len(self.kVec))]
-        
-        #((self.kVec - self.MVF_vals) * 100 / self.kVec)
-
-    @property
-    def MVF_cumu_sum(self):
-        return [i for i in itertools.accumulate(self.MVF_vals)]
-
-    @property
-    def cumu_delta(self):
-        return [self.kVec_cumu_sum[i] - self.MVF_cumu_sum[i] for i in range(len(self.kVec_cumu_sum))]
-
-    @property
-    def cumu_rel_delta(self):
-        return [self.cumu_delta[i] * 100 / self.kVec_cumu_sum[i] for i in range(len(self.kVec_cumu_sum))]
+    def cumu_percent(self):
+        result = []
+        for i in range(len(self.MVF_vals)):
+            result.append(100*np.sum(self.MVF_vals[:i+1])/np.sum(self.MVF_vals))
+        return result
  
 if __name__=="__main__":
     kVec = [1, 0, 1, 15, 15, 32, 29, 45, 34, 67, 41, 71, 77, 80, 80, \
