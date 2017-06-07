@@ -51,7 +51,7 @@ class Mode2TabWidget(ModeTabWidget):
     def saveAndDisplayResults(self, models):
         print("saving results...  {}".format(len(models)))
         self.globalData.output[self.modex] = models
-        self.resultWindow = Mode2ResultsWidget(models, self.phaseNames)
+        self.resultWindow = Mode2ResultsWidget(models, self.phaseNames, self.phaseValues)
     
     def populateTable(self):
         #self.setGlobalData(data)
@@ -93,10 +93,11 @@ class Mode2TabWidget(ModeTabWidget):
 
 
 class Mode2ResultsWidget(QWidget):
-    def __init__(self, models, phaseNames, parent=None):
+    def __init__(self, models, phaseNames, phaseValues, parent=None):
         super().__init__()
         self.models = models
         self.phaseNames = phaseNames
+        self.phaseValues = phaseValues
         self.setLayout(self.resultPlot())
         self.show()
         
@@ -114,11 +115,13 @@ class Mode2ResultsWidget(QWidget):
         self.selPeakLocation = self.models[-1].get_peak_loc()
         self.numLatentErrors = self.models[-1].fi_t(a, b, c, len(self.models))
         self.eff = (1 - self.numLatentErrors/a) * 100
-        ax.bar([i+1-0.1 for i in range(len(self.models))], [m.kVec_cumu_sum[-1] for m in self.models], width=0.2, color='b', label="Actual")
-        ax.bar([i+1+0.1 for i in range(len(self.models))], [m.MVF(m.tVec[-1], a, b, c) for i, m in enumerate(self.models)], width=0.2, color='r', label="Estimated")
-        
+        #ax.bar([i+1-0.1 for i in range(len(self.models))], [m.kVec_cumu_sum[-1] for m in self.models], width=0.2, color='b', label="Actual")
+        #ax.bar([i+1+0.1 for i in range(len(self.models))], [m.MVF(m.tVec[-1], a, b, c) for i, m in enumerate(self.models)], width=0.2, color='r', label="Estimated")
+        ax.bar([i+1-0.1 for i in range(len(self.phaseNames))], np.cumsum(self.phaseValues), width=0.2, color='b', label="Actual")
+        ax.bar([i+1+0.1 for i in range(len(self.phaseNames))], [self.models[-1].MVF(t+1, a, b, c) for t in range(len(self.phaseNames))] , width=0.2, color='r', label="Estimated")
+
         ax.set_xlabel("Phases")
-        ax.set_ylabel("Errors")
+        ax.set_ylabel("Cumulative Errors")
         ax.set_title("Error Discovery Data and Fitted Histograms")
         ax.legend()
         canvas.draw()
@@ -178,11 +181,16 @@ class TaskThread(PyQt5.QtCore.QThread):
 
     def run(self):
         self.models = []
-        for i in range(len(self.phaseValues)):
-            kVec = self.kVec[:self.phaseValues[i]]
-            tVec = self.tVec[:self.phaseValues[i]]
-            w = Weibull(kVec, tVec)
-            self.models.append(w)
-            self.updateProgress.emit(i)
+        kPhase = self.phaseValues
+        tPhase = [i+1 for i in range(len(kPhase))]
+        w = Weibull(kPhase, tPhase)
+        self.models.append(w)
+        self.updateProgress.emit(len(kPhase))
+        #for i in range(len(self.phaseValues)):
+        #    kVec = self.kVec[:self.phaseValues[i]]
+        #    tVec = self.tVec[:self.phaseValues[i]]
+        #    w = Weibull(kVec, tVec)
+        #    self.models.append(w)
+        #    self.updateProgress.emit(i)
 
         self.taskFinished.emit(self.models)  

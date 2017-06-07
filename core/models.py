@@ -38,7 +38,7 @@ class WeibullNumpy():
         self.ll_error_list = []
         self.ll_error = 1
         self.j = 0
-        while(self.ll_error > np.power(10.0,-10)):
+        while(self.ll_error > np.power(10.0,-5)):
             self.a_est = self.aMLE(self.total_failures, self.tn, self.brule[self.j], self.crule[self.j])
             self.arule.append(self.a_est)
             #print("Estimated a: {}".format(self.a_est))

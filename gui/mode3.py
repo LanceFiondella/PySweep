@@ -58,13 +58,13 @@ class Mode3TabWidget(ModeTabWidget):
         self.upper = []
         self.lower = []
         self.nom = []
-        for i in range(len(models)):
+        for i in range(len(self.phaseValues)):
             t = i + 1
-            a = models[i].a_est
+            a = models[-1].a_est
             #a = float(self.estTotalInjErrors.text())
-            b = models[i].b_est
-            c = models[i].c_est
-            Gt = models[i].MVF(t, a, b, c) - models[i].MVF(t-1, a, b, c)
+            b = models[-1].b_est
+            c = models[-1].c_est
+            Gt = models[-1].MVF(t, a, b, c) - models[-1].MVF(t-1, a, b, c)
             self.nom.append(Gt)
             
 
