@@ -197,7 +197,7 @@ class Mode1ResultsWidget(QDialog):
         layout = QVBoxLayout()
         label = QLabel("Enter Data (m) : ")
         self.dataTextBoxM = QLineEdit()
-        self.dataTextBoxM.setText('1')
+        self.dataTextBoxM.setText('0')
         #noie = QLabel("<b>Number of Intervals Estimated (m):</b> {}".format(self.intervals))
         t = self.model.tn + self.intervals
         a = self.model.a_est
@@ -403,5 +403,5 @@ class TaskThread(PyQt5.QtCore.QThread):
         self.kVec = kVec
 
     def run(self):
-        w = Weibull(self.kVec, self.tVec)
+        w = Weibull(self.kVec, self.tVec, -15)
         self.taskFinished.emit(w)  

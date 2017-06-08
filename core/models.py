@@ -9,9 +9,10 @@ mp.dps = 30 #Set the precision of calculations
 mp.pretty =  True #Set pretty print to True
 
 class WeibullNumpy():
-    def __init__(self, kVec, tVec):
+    def __init__(self, kVec, tVec, errorConv):
         self.kVec = np.array(kVec, dtype=np.longdouble)              #Failure Counts (FC)
         self.tVec = np.array(tVec, dtype=np.longdouble)              #Time interval vector
+        self.errorConv = errorConv
         self.kVec_cumu_sum = np.cumsum(self.kVec)
         self.kVec_len = np.size(self.kVec)      #Length of FC
         self.total_failures = self.kVec.sum()   #Sum of all recorded failures
@@ -38,7 +39,7 @@ class WeibullNumpy():
         self.ll_error_list = []
         self.ll_error = 1
         self.j = 0
-        while(self.ll_error > np.power(10.0,-5)):
+        while(self.ll_error > np.power(10.0,self.errorConv)):
             self.a_est = self.aMLE(self.total_failures, self.tn, self.brule[self.j], self.crule[self.j])
             self.arule.append(self.a_est)
             #print("Estimated a: {}".format(self.a_est))

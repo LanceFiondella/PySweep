@@ -276,7 +276,7 @@ class TaskThread(PyQt5.QtCore.QThread):
         self.models = []
         kPhase = self.phaseValues
         tPhase = [i+1 for i in range(len(kPhase))]
-        w = Weibull(kPhase, tPhase)
+        w = Weibull(kPhase, tPhase, -5)
         self.models.append(w)
         self.updateProgress.emit(len(kPhase))
         #for i in range(len(self.phaseValues)):
