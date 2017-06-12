@@ -2,7 +2,7 @@ from gui.mode_template import ModeTabWidget
 from PyQt5.QtWidgets import QDialog, QVBoxLayout,\
     QDialogButtonBox, QFileDialog, QWidget, QTableWidget,\
     QTableWidgetItem, QGridLayout, QPushButton, QHBoxLayout, QHeaderView, QGroupBox,\
-    QLabel, QProgressBar, QRadioButton, QLineEdit, QMessageBox, QAbstractItemView
+    QLabel, QProgressBar, QRadioButton, QLineEdit, QMessageBox, QAbstractItemView, QTabWidget
 from PyQt5.QtCore import Qt
 import PyQt5
 import sys
@@ -53,9 +53,11 @@ class Mode2TabWidget(ModeTabWidget):
     def saveAndDisplayResults(self, models):
         print("saving results...  {}".format(len(models)))
         self.globalData.output[self.modex] = models
-        self.resultWindow = Mode2ResultsWidget(models, self.phaseNames, self.phaseValues)
+        
         self.computeMode3(models)
-        self.resultWindow2 = Mode3ResultsWidget(self.results, self.phaseNames)
+        self.resultWindow = Mode2ResultsWidget(models, self.phaseNames, self.phaseValues, self.results)
+        #self.resultWindow2 = Mode3ResultsWidget(self.results, self.phaseNames)
+        #self.results = 
     
     def populateTable(self):
         #self.setGlobalData(data)
@@ -73,7 +75,7 @@ class Mode2TabWidget(ModeTabWidget):
             self.tableWidget.setItem(i,1,kVec)
 
     def tableChanged(self, x, y):
-        print("Table data changed! at : {}, {}".format(x, y))
+        #print("Table data changed! at : {}, {}".format(x, y))
         self.globalData.input[self.modex] = self.getTableData()
         self.dataChanged = True
 
@@ -104,12 +106,14 @@ class Mode2TabWidget(ModeTabWidget):
         row3 = QHBoxLayout()
         upperTolLabel = QLabel('Upper Tolerance (%) :')
         self.upperTol = QLineEdit()
+        self.upperTol.setText('10')
         row3.addWidget(upperTolLabel)
         row3.addWidget(self.upperTol)
 
         row4 = QHBoxLayout()
         lowerTolLabel = QLabel('Lower Tolerance (%) :')
         self.lowerTol = QLineEdit()
+        self.lowerTol.setText('10')
         row4.addWidget(lowerTolLabel)
         row4.addWidget(self.lowerTol)
 
@@ -184,16 +188,25 @@ class Mode2TabWidget(ModeTabWidget):
 
 
 class Mode2ResultsWidget(QWidget):
-    def __init__(self, models, phaseNames, phaseValues, parent=None):
+    def __init__(self, models, phaseNames, phaseValues, results,  parent=None):
         super().__init__()
         self.models = models
         self.phaseNames = phaseNames
         self.phaseValues = phaseValues
-        self.setLayout(self.resultPlot())
+        self.results = results
+        self.tabWidget = QTabWidget()
+
+        self.tabWidget.addTab(self.mode2ResultPlot(), "Mode 2 Results")
+        self.tabWidget.addTab(self.mode3ResultPlot(), "Mode 3 Results")
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.tabWidget)
+        #self.setLayout(self.resultPlot())
         self.show()
         
 
-    def resultPlot(self):
+    def mode2ResultPlot(self):
+        widget = QWidget()
         fig = plt.figure()
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
@@ -216,14 +229,43 @@ class Mode2ResultsWidget(QWidget):
         ax.set_title("Error Discovery Data and Fitted Histograms")
         ax.legend()
         canvas.draw()
-        plt.tight_layout()
         plt.grid(True)
+        plt.tight_layout()
 
         layoutfig = QVBoxLayout()
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
-        return layoutfig
+        widget.setLayout(layoutfig)
+        return widget
 
+    def mode3ResultPlot(self):
+        widget = QWidget()
+        fig = plt.figure()
+        #plt.tight_layout()
+        plt.grid(True)
+        canvas = FigureCanvas(fig)
+        toolbar = NavigationToolbar(canvas, self)
+        ax = fig.add_subplot(111)
+        ax.set_xticklabels([""] + self.phaseNames)
+        ax.plot(self.results['lower'], color='g', label='Lower')   
+        #ax.bar([i+1-0.2 for i in range(len(self.phaseNames))], self.results['lower'], width=0.2, color='g', label="Lower")
+        ax.plot(self.results['nominal'], color='b', label='Nominal')   
+        #ax.bar([i+1 for i in range(len(self.phaseNames))], self.results['nominal'], width=0.2, color='b', label="Nominal")
+        ax.plot(self.results['upper'], color='r', label='Upper')   
+        #ax.bar([i+1+0.2 for i in range(len(self.phaseNames))], self.results['upper'], width=0.2, color='r', label="Upper")
+        
+        ax.set_xlabel("Phases")
+        ax.set_ylabel("Errors")
+        ax.set_title("Error Discovery Data and Fitted Histograms")
+        ax.legend()
+        canvas.draw()
+        plt.tight_layout()
+
+        layoutfig = QVBoxLayout()
+        layoutfig.addWidget(toolbar)
+        layoutfig.addWidget(canvas, 1)
+        widget.setLayout(layoutfig)
+        return widget
 
     
             
@@ -235,7 +277,8 @@ class ComputeWidget(QWidget):
 
         # Create a progress bar and a button and add them to the main layout
         self.progressBar = QProgressBar(self)
-        self.progressBar.setRange(0, len(phaseValues))
+        #self.progressBar.setRange(0, len(phaseValues))
+        self.progressBar.setRange(0,1)
         self.label = QLabel()
         
         layout.addWidget(self.label)
@@ -249,7 +292,7 @@ class ComputeWidget(QWidget):
         self.myLongTask.taskFinished.connect(self.onTaskFinished)
         self.myLongTask.updateProgress.connect(self.updateProgress)
         self.myLongTask.start()
-        
+        self.progressBar.setRange(0,0)
         
         self.show()
 
@@ -261,7 +304,7 @@ class ComputeWidget(QWidget):
         
     def updateProgress(self, value):
         self.label.setText("Computing Phase : {}".format(value+1))
-        self.progressBar.setValue(value+1)
+        #self.progressBar.setValue(value+1)
 
 class TaskThread(PyQt5.QtCore.QThread):
     taskFinished = PyQt5.QtCore.pyqtSignal(list)

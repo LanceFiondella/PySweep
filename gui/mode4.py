@@ -32,6 +32,7 @@ class Mode4TabWidget(ModeTabWidget):
         
         latentErrorLabel = QLabel('Enter Latent Error :')
         self.latentErrorBox = QLineEdit()
+        self.latentErrorBox.setText('1.32')
         self.computeButton = QPushButton('Compute')
         self.computeButton.setToolTip('Starts the computation')
         self.computeButton.clicked.connect(self.compute)
@@ -48,34 +49,22 @@ class Mode4TabWidget(ModeTabWidget):
     def compute(self):
         data = self.globalData.input[self.modex]
         #data['dp'] = self.getTableData()
-        try:
+        #try:
+        if 1:
             if self.dataChanged:
                 data['ld'] = float(self.latentErrorBox.text())
                 self.di = defect_injection.DefectInjection(data)
                 self.resultDialog = Mode4ResultsDialog(self.di)
             else:
                 self.resultDialog = Mode4ResultsDialog(self.di)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
-            QMessageBox.about(self, 'Error','Invalid or missing Lantent Error value')
+        #except:
+        #    print("Unexpected error:", sys.exc_info()[0])
+        #    QMessageBox.about(self, 'Error','Invalid or missing Lantent Error value')
         
         
         print("Compute!")
 
-    def getTableData(self):
-        names = []
-        data = []
-        for i in range(self.tableWidget.rowCount()):
-            try:
-                if self.tableWidget.item(i,0) != None:
-                    names.append(self.tableWidget.item(i,0).text())
-                    data.append(float(self.tableWidget.item(i,1).text()))
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
-                raise
-        data = {'values':data, 'names':names}
-        return data
-    
+   
     def populateTable(self):
         #self.setGlobalData(data)
         col1Name = 'names'
@@ -115,7 +104,7 @@ class Mode4TabWidget(ModeTabWidget):
 
 
 
-class Mode4ResultsDialog(QDialog):
+class Mode4ResultsDialog(QWidget):
     def __init__(self, di, parent=None):
         super(Mode4ResultsDialog, self).__init__(parent)
         self.di = di
@@ -135,7 +124,9 @@ class Mode4ResultsDialog(QDialog):
 
         self.tabWidget.addTab(self.defectsInPhaseTab, "Defects/KSLOC Injected or Discovered in Phase")
         self.tabWidget.addTab(self.phaseInjectionTab,"Phase Injection/Detection/Leakage")
+        self.tabWidget.addTab(self.genIntermediateTab(), "Intermediate Results")
         self.tabWidget.addTab(self.leakageByPhaseTab,"Percentage Leakage by Phase")
+        self.tabWidget.addTab(self.genUpdatedIntermediateTab(), 'Updated Intermediate Calculations')
         self.tabWidget.addTab(self.finalComputationTab,"Final Computation")
 
         
@@ -145,18 +136,85 @@ class Mode4ResultsDialog(QDialog):
         self.setGeometry(400,400,1000, 800)
         self.show()
 
+    def genUpdatedIntermediateTab(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
+        labels = [ "<b> Updated Estimate of latency: </b> {:.6f}".format(self.di.UEL),
+                "<b>Number of Relative Errors : </b> {:.6f}".format(self.di.RE2)
+                ]
+        for label in labels:
+            l = QLabel()
+            l.setText(label)
+            layout.addWidget(l)
+
+        data = [self.di.UDF, self.di.UDR, self.di.UPLD, self.di.UENID]
+
+        tableWidget = QTableWidget()
+        tableWidget.setColumnCount(self.di.num_phases)
+        #tableWidget.setRowCount(len(data))
+        tableWidget.setHorizontalHeaderLabels(self.di.names)
+        tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
+        for row in range(len(data)):
+            tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases)]
+            tableWidget.insertRow(row)
+            for col in range(len(tableItemRow)):
+                tableItemRow[col].setText('{:.6f}'.format(data[row][col]))
+                tableWidget.setItem(row, col, tableItemRow[col])
+
+        tableWidget.setVerticalHeaderLabels(['Updated Total Defects found', 'Updated rate of defects found', 
+                                            'Updated proportion of latent defects per phase', 
+                                            'Updated total estimated number of injected defects by phase']) 
+        layout.addWidget(tableWidget)
+        widget.setLayout(layout)
+        return widget
+
+
+    def genIntermediateTab(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
+        labels = [ "<b> Average Efficiency: </b> {:.6f}".format(self.di.AE),
+                "<b>Initial Estimate of latency : </b> {:.6f}".format(self.di.IEL)
+                ]
+        for label in labels:
+            l = QLabel()
+            l.setText(label)
+            layout.addWidget(l)
+
+        data = [self.di.DF, self.di.DR, self.di.PLD, self.di.ENID]
+
+        tableWidget = QTableWidget()
+        tableWidget.setColumnCount(self.di.num_phases)
+        #tableWidget.setRowCount(len(data))
+        tableWidget.setHorizontalHeaderLabels(self.di.names)
+        tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
+        for row in range(len(data)):
+            tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases)]
+            tableWidget.insertRow(row)
+            for col in range(len(tableItemRow)):
+                tableItemRow[col].setText('{:.6f}'.format(data[row][col]))
+                tableWidget.setItem(row, col, tableItemRow[col])
+
+        tableWidget.setVerticalHeaderLabels(['Latent Defects', 'Defect Rate per Phase', 
+                                            'Proportion of latent defects per phase', 
+                                            'Estimated number of injected defects per phase']) 
+        layout.addWidget(tableWidget)
+        widget.setLayout(layout)
+        return widget
+
     def genFinalCompTable(self):
         layout = QVBoxLayout()
 
         #Generate final outputs
-        labels = ["<b>Overall Defect Discovery Efficiency:</b> {:.2f}%".format(self.di.ODDE*100), 
-                "<b>Initial Average Phase Defect Discovery Efficiency:</b> {:.2f}%".format(self.di.ADE*100),
-                "<b>Average Phase Defect Discovery Efficiency:</b> {:.2f}%".format(self.di.APDE*100),
-                "<b>Initial Average Phase Defect Leakage:</b> {:.2f}%".format(self.di.ADL*100),
-                "<b>Average Phase Defect Leakage:</b> {:.2f}%".format(self.di.APDL*100),
-                "<b>Latent Defects as % of Total Defects Injected:</b> {:.2f}%".format(self.di.LDPD*100),
-                "<b>Total Defects Injected / KSLOC:</b> {:.2f}".format(self.di.TDI),
-                "<b>Latent Defects / KSLOC:</b> {:.2f}".format(self.di.LD)
+        labels = ["<b>Overall Defect Discovery Efficiency:</b> {:.6f}%".format(self.di.ODDE*100), 
+                "<b>Initial Average Phase Defect Discovery Efficiency:</b> {:.6f}%".format(self.di.ADE*100),
+                "<b>Average Phase Defect Discovery Efficiency:</b> {:.6f}%".format(self.di.APDE*100),
+                "<b>Initial Average Phase Defect Leakage:</b> {:.6f}%".format(self.di.ADL*100),
+                "<b>Average Phase Defect Leakage:</b> {:.6f}%".format(self.di.APDL*100),
+                "<b>Latent Defects as % of Total Defects Injected:</b> {:.6f}%".format(self.di.LDPD*100),
+                "<b>Total Defects Injected / KSLOC:</b> {:.6f}".format(self.di.TDI),
+                "<b>Latent Defects / KSLOC:</b> {:.6f}".format(self.di.LD)
                 ]
 
         for label in labels:
@@ -178,9 +236,9 @@ class Mode4ResultsDialog(QDialog):
             tableWidget.insertRow(row)
             for col in range(len(tableItemRow)):
                 if col == 0:
-                    tableItemRow[col].setText('{:.2f}'.format(self.di.I2[row]))
+                    tableItemRow[col].setText('{:.6f}'.format(self.di.I2[row]))
                 else:
-                    tableItemRow[col].setText('{:.2f}'.format(data[row, col-1]))
+                    tableItemRow[col].setText('{:.6f}'.format(data[row, col-1]))
                 tableWidget.setItem(row, col, tableItemRow[col])
 
         #Adding other stats
@@ -195,14 +253,12 @@ class Mode4ResultsDialog(QDialog):
             tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases + 1)]
             tableWidget.insertRow(curr_row + row)
             for col in range(len(tableItemRow)):
-                tableItemRow[col].setText('{:.2f}'.format(data[row][col]))
+                tableItemRow[col].setText('{:.6f}'.format(data[row][col]))
                 tableWidget.setItem(curr_row + row, col, tableItemRow[col])
 
         tableWidget.setVerticalHeaderLabels(self.di.names + [' ', 'Calculated', 'User Input Defects', 'Relative Error'])
         layout.addWidget(tableWidget)
         return layout
-
-
 
     def genDataLabels(self):
         layout = QHBoxLayout()
@@ -222,7 +278,7 @@ class Mode4ResultsDialog(QDialog):
     def genRightPlot(self):
         #Figure definition
         fig2 = plt.figure()
-        #plt.tight_layout()
+        
         plt.grid(True)
         canvas2 = FigureCanvas(fig2)
         toolbar2 = NavigationToolbar(canvas2, self)
@@ -235,6 +291,7 @@ class Mode4ResultsDialog(QDialog):
         ax2.set_ylabel("Errors")
         ax2.set_title("Phase Injection/Detection/Leakage")
         ax2.legend()
+        plt.tight_layout()
         canvas2.draw()
 
         #Table definition
@@ -248,8 +305,10 @@ class Mode4ResultsDialog(QDialog):
         for row in range(len(data)):
             tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases)]
             for col in range(self.di.num_phases):
-                tableItemRow[col].setText('{:.2f}'.format(data[row][col]))
+                tableItemRow[col].setText('{:.6f}'.format(data[row][col]))
                 tableWidget2.setItem(row, col, tableItemRow[col])
+
+
 
         layoutfig2 = QVBoxLayout()
         layoutfig2.addWidget(toolbar2)
@@ -286,7 +345,7 @@ class Mode4ResultsDialog(QDialog):
         for row in range(len(data)):
             tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases)]
             for col in range(self.di.num_phases):
-                tableItemRow[col].setText('{:.2f}'.format(data[row][col]))
+                tableItemRow[col].setText('{:.6f}'.format(data[row][col]))
                 tableWidget.setItem(row, col, tableItemRow[col])
 
         layoutfig = QVBoxLayout()
@@ -295,7 +354,6 @@ class Mode4ResultsDialog(QDialog):
         layoutfig.addWidget(tableWidget)
         layoutfig.setAlignment(tableWidget, Qt.AlignBottom)
         return layoutfig
-
 
     def genLeakageRatePlot(self):
         fig = plt.figure()
@@ -327,7 +385,7 @@ class Mode4ResultsDialog(QDialog):
         for row in range(len(data)):
             tableItemRow = [QTableWidgetItem() for i in range(self.di.num_phases)]
             for col in range(self.di.num_phases):
-                tableItemRow[col].setText('{:.2f}'.format(data[row][col]))
+                tableItemRow[col].setText('{:.6f}'.format(data[row][col]))
                 tableWidget1.setItem(row, col, tableItemRow[col])
 
         layout = QVBoxLayout()

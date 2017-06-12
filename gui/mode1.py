@@ -77,7 +77,7 @@ class Mode1TabWidget(ModeTabWidget):
             self.tableWidget.setItem(i,1,kVec)
 
     def tableChanged(self, x, y):
-        print("Table data changed! at : {}, {}".format(x, y))
+        #print("Table data changed! at : {}, {}".format(x, y))
         self.globalData.input[self.modex] = self.getTableData()
         self.dataChanged = True
 
@@ -107,13 +107,13 @@ class Mode1ResultsWidget(QDialog):
         layout = QVBoxLayout(self)
 
         self.errorsToDate = QLabel()
-        self.errorsToDate.setText("<b>Errors discovered to date:</b> {}".format(self.model.total_failures))
+        self.errorsToDate.setText("<b>Errors discovered to date:</b> {:.6f}".format(self.model.total_failures))
         self.totalProjected = QLabel()
-        self.totalProjected.setText("<b>Total errors projected:</b> {}".format(self.model.a_est))
+        self.totalProjected.setText("<b>Total errors projected:</b> {:.6f}".format(self.model.a_est))
         self.percentOfErrors = QLabel()
-        self.percentOfErrors.setText("<b>Percentage of projected errors found to date:</b> {}".format(100.0*self.model.total_failures/self.model.a_est))
+        self.percentOfErrors.setText("<b>Percentage of projected errors found to date:</b> {:.6f}".format(100.0*self.model.total_failures/self.model.a_est))
         self.estPeakLocation = QLabel()
-        self.estPeakLocation.setText("<b>Estimated location of peak:</b> {} ".format(self.model.get_peak_loc()+1)) #Added 1 because of Python 0 indexing
+        self.estPeakLocation.setText("<b>Estimated location of peak:</b> {:.6f} ".format(self.model.get_peak_loc()+1)) #Added 1 because of Python 0 indexing
 
         self.tabWidget = QTabWidget()
         self.cumuCurveTab = QWidget()
@@ -151,9 +151,9 @@ class Mode1ResultsWidget(QDialog):
         layout.setAlignment(Qt.AlignTop)
         noie = QLabel("{} {}".format("<b>Number of intervals entered:</b>",self.model.n))
         noie.setAlignment(Qt.AlignCenter)
-        tedtd = QLabel("{} {}".format("<b>Total Errors Discovered to Date:</b>", self.model.total_failures))
+        tedtd = QLabel("{} {:.6f}".format("<b>Total Errors Discovered to Date:</b>", self.model.total_failures))
         tedtd.setAlignment(Qt.AlignCenter)
-        tep = QLabel("<b>Total Errors Projected:</b> {0:.4f}".format(self.model.a_est))
+        tep = QLabel("<b>Total Errors Projected:</b> {0:.6f}".format(self.model.a_est))
         tep.setAlignment(Qt.AlignCenter)
         layout.addWidget(noie)
         layout.addWidget(tedtd)
@@ -181,8 +181,8 @@ class Mode1ResultsWidget(QDialog):
         self.dataTextBoxP = QLineEdit()
         self.dataTextBoxP.setText('0')
         self.pefe = QLabel("<b>Percentage (p) entered for estimate:</b> {}".format(self.percent))
-        self.intap = QLabel("<b>Intervals needed to achieve p:</b> {0:.4f}".format(self.intervalsNeeded))
-        self.irantap = QLabel("<b>Intervals remaining after n needed to achieve p:</b> {0:10.4f}".format(self.intervalsRemain))
+        self.intap = QLabel("<b>Intervals needed to achieve p:</b> {0:.6f}".format(self.intervalsNeeded))
+        self.irantap = QLabel("<b>Intervals remaining after n needed to achieve p:</b> {0:10.6f}".format(self.intervalsRemain))
         layout.addWidget(label)
         layout.addWidget(self.dataTextBoxP)
         layout.addWidget(self.pefe)
@@ -208,10 +208,10 @@ class Mode1ResultsWidget(QDialog):
         numer = math.log(1 - (99.99 / 100))
         term = - numer / b
         self.intervals99 = math.pow(term, 1/c)
-        poped = QLabel("<b>Intervals Needed to Achieve 99.99% of Total Errors:</b> {0:.4f}".format(self.intervals99))
-        self.tedti = QLabel("<b>Total Errors Discovered through Interval (m):</b> {0:.4f}".format(self.errorsThroughM))
-        self.eeimi = QLabel("<b>Estimated Errors in (m) intervals:</b> {0:.4f}".format(self.errorsInM))
-        self.pote =  QLabel("<b>Percentage of Total Errors:</b> {0:.4f}".format(100.0* self.errorsThroughM / a))
+        poped = QLabel("<b>Intervals Needed to Achieve 99.99% of Total Errors:</b> {0:.6f}".format(self.intervals99))
+        self.tedti = QLabel("<b>Total Errors Discovered through Interval (m):</b> {0:.6f}".format(self.errorsThroughM))
+        self.eeimi = QLabel("<b>Estimated Errors in (m) intervals:</b> {0:.6f}".format(self.errorsInM))
+        self.pote =  QLabel("<b>Percentage of Total Errors:</b> {0:.6f}".format(100.0* self.errorsThroughM / a))
         layout.addWidget(label)
         layout.addWidget(self.dataTextBoxM)
         layout.addWidget(poped)
@@ -233,9 +233,9 @@ class Mode1ResultsWidget(QDialog):
             c = self.model.c_est
             self.errorsThroughM = self.model.MVF(t, a, b, c)
             self.errorsInM = self.errorsThroughM - self.model.total_failures
-            self.tedti.setText("<b>Total Errors Discovered through Interval (m):</b> {0:.4f}".format(self.errorsThroughM))
-            self.eeimi.setText("<b>Estimated Errors in (m) intervals:</b> {0:.4f}".format(self.errorsInM))
-            self.pote.setText("<b>Percentage of Total Errors:</b> {0:.4f}".format(100.0* self.errorsThroughM / a))
+            self.tedti.setText("<b>Total Errors Discovered through Interval (m):</b> {0:.6f}".format(self.errorsThroughM))
+            self.eeimi.setText("<b>Estimated Errors in (m) intervals:</b> {0:.6f}".format(self.errorsInM))
+            self.pote.setText("<b>Percentage of Total Errors:</b> {0:.6f}".format(100.0* self.errorsThroughM / a))
             
         
         if self.isFloat(self.dataTextBoxP.text()):
@@ -244,9 +244,9 @@ class Mode1ResultsWidget(QDialog):
             term = - numer / self.model.b_est
             self.intervalsNeeded = math.pow(term, 1/self.model.c_est)
             self.intervalsRemain = self.intervalsNeeded - self.model.n
-            self.pefe.setText("<b>Percentage (p) entered for estimate:</b> {}".format(self.percent))
-            self.intap.setText("<b>Intervals needed to achieve p:</b> {0:.4f}".format(self.intervalsNeeded))
-            self.irantap.setText("<b>Intervals remaining after n needed to achieve p:</b> {0:10.4f}".format(self.intervalsRemain))
+            self.pefe.setText("<b>Percentage (p) entered for estimate:</b> {0:.6f}".format(self.percent))
+            self.intap.setText("<b>Intervals needed to achieve p:</b> {0:.6f}".format(self.intervalsNeeded))
+            self.irantap.setText("<b>Intervals remaining after n needed to achieve p:</b> {0:10.6f}".format(self.intervalsRemain))
         
     def isFloat(self, text):
         try:
@@ -339,7 +339,7 @@ class Mode1ResultsWidget(QDialog):
             tableItemRow = [QTableWidgetItem() for i in range(10)]
             for col in range(10):
                 #tableItemRow[col].setText('{:.4f}'.format(data[col][row]))
-                tableItemRow[col].setText('{}'.format(data[col][row]))
+                tableItemRow[col].setText('{:.6f}'.format(data[col][row]))
                 self.tableWidget.setItem(row, col, tableItemRow[col])
 
     def saveData(self):
