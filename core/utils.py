@@ -61,7 +61,7 @@ class GlobalData():
             for name in wb.get_sheet_names():
                 worksheet = wb.get_sheet_by_name(name)
                 data = []
-                if "mode1" in name.lower():
+                if "modea" in name.lower().replace(" ",""):
                     self.input['mode1'] = {}
                     self.input['mode1']['tVec'] = []
                     self.input['mode1']['kVec'] = []
@@ -71,7 +71,7 @@ class GlobalData():
                             self.input['mode1']['kVec'].append(int(row[1].value))
                         except:
                             pass
-                elif "mode2" in name.lower():
+                elif "modeb" in name.lower().replace(" ",""):
                     self.input['mode2'] = {}
                     self.input['mode2']['names'] = []
                     self.input['mode2']['values'] = []
@@ -91,7 +91,7 @@ class GlobalData():
                             self.input['mode3']['names'].append(row[0].value)
                         except:
                             pass
-                elif "mode4" in name.lower():
+                elif "modec" in name.lower().replace(" ",""):
                     self.input['mode4'] = {}
                     self.input['mode4']['names'] = []
                     self.input['mode4']['values'] = []

@@ -86,10 +86,10 @@ class TabsWidget(QWidget):
         #self.mode3tab = mode3.Mode3TabWidget(parent.globalData)
         self.mode4tab = mode4.Mode4TabWidget(parent.globalData)
 
-        self.tabWidget.addTab(self.mode1tab, "Mode 1")
-        self.tabWidget.addTab(self.mode2tab, "Mode 2 + Mode 3")
+        self.tabWidget.addTab(self.mode1tab, "Mode A")
+        self.tabWidget.addTab(self.mode2tab, "Mode B")
         #self.tabWidget.addTab(self.mode3tab, "Mode 3")
-        self.tabWidget.addTab(self.mode4tab, "Mode 4")
+        self.tabWidget.addTab(self.mode4tab, "Mode C")
 
         self.layout.addWidget(self.tabWidget)
         #self.setLayout(self.layout)
