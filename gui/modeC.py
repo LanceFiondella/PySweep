@@ -16,11 +16,11 @@ from gui.mode_template import ModeTabWidget
 from core.models import WeibullNumpy as Weibull
 
 
-class Mode4TabWidget(ModeTabWidget):
+class ModeCTabWidget(ModeTabWidget):
     def __init__(self, globalData):
         super().__init__(globalData)
         self.globalData = globalData
-        self.modex = 'mode4'
+        self.modex = 'modeC'
         self.tableWidget.setHorizontalHeaderLabels(['Phase Name','Defects Detected/\nKSLOC'])
         self.tableWidget.cellChanged.connect(self.tableChanged)
         self.dataChanged = False
@@ -54,9 +54,9 @@ class Mode4TabWidget(ModeTabWidget):
             if self.dataChanged:
                 data['ld'] = float(self.latentErrorBox.text())
                 self.di = defect_injection.DefectInjection(data)
-                self.resultDialog = Mode4ResultsDialog(self.di)
+                self.resultDialog = ModeCResultsDialog(self.di)
             else:
-                self.resultDialog = Mode4ResultsDialog(self.di)
+                self.resultDialog = ModeCResultsDialog(self.di)
         #except:
         #    print("Unexpected error:", sys.exc_info()[0])
         #    QMessageBox.about(self, 'Error','Invalid or missing Lantent Error value')
@@ -104,9 +104,9 @@ class Mode4TabWidget(ModeTabWidget):
 
 
 
-class Mode4ResultsDialog(QWidget):
+class ModeCResultsDialog(QWidget):
     def __init__(self, di, parent=None):
-        super(Mode4ResultsDialog, self).__init__(parent)
+        super(ModeCResultsDialog, self).__init__(parent)
         self.di = di
         layout = QVBoxLayout(self)
         dl_layout = self.genDataLabels()
@@ -131,7 +131,7 @@ class Mode4ResultsDialog(QWidget):
 
         
         layout.addWidget(self.tabWidget)
-        self.setWindowTitle("Defect Discovery and Injection Profiles")
+        self.setWindowTitle('SwEET - Mode C Results')
         layout.setAlignment(Qt.AlignTop)
         self.setGeometry(400,400,1000, 800)
         self.show()

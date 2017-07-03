@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
+Author: Venkateswaran Shekar (gv.shekar@gmail.com)
 Main window for the tool
 """
 
@@ -10,7 +11,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QDialog, QVBoxLayout,\
     QLabel
 from PyQt5.QtCore import Qt
 from core import utils
-from gui import mode1, mode2, mode3, mode4
+from gui import modeA, modeB, modeC
 import sys
 
 
@@ -25,7 +26,7 @@ class MainWindow(QMainWindow):
     def initUI(self):
         self.statusBar().showMessage('Ready')
         self.setGeometry(300, 300, 800, 600)
-        self.setWindowTitle('PySweep')
+        self.setWindowTitle('SwEET')
         self.initMenuBar()
         self.tabs = TabsWidget(self)
         self.setCentralWidget(self.tabs)
@@ -49,7 +50,7 @@ class MainWindow(QMainWindow):
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(newProjectAction)
+        #fileMenu.addAction(newProjectAction)
         fileMenu.addAction(openProjectAction)
         fileMenu.addAction(exitAction)
     
@@ -68,10 +69,10 @@ class MainWindow(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, 'Open File','.', filter='*.xlsx')
         print(fname)
         self.globalData.import_input_excel(fname[0])
-        self.tabs.mode1tab.populateTable()
-        self.tabs.mode2tab.populateTable()
+        self.tabs.modeAtab.populateTable()
+        self.tabs.modeBtab.populateTable()
         #self.tabs.mode3tab.populateTable()
-        self.tabs.mode4tab.populateTable()
+        self.tabs.modeCtab.populateTable()
         
 
 
@@ -81,15 +82,15 @@ class TabsWidget(QWidget):
         self.layout = QVBoxLayout(self)
         
         self.tabWidget = QTabWidget()
-        self.mode1tab = mode1.Mode1TabWidget(parent.globalData)
-        self.mode2tab = mode2.Mode2TabWidget(parent.globalData)
+        self.modeAtab = modeA.ModeATabWidget(parent.globalData)
+        self.modeBtab = modeB.ModeBTabWidget(parent.globalData)
         #self.mode3tab = mode3.Mode3TabWidget(parent.globalData)
-        self.mode4tab = mode4.Mode4TabWidget(parent.globalData)
+        self.modeCtab = modeC.ModeCTabWidget(parent.globalData)
 
-        self.tabWidget.addTab(self.mode1tab, "Mode A")
-        self.tabWidget.addTab(self.mode2tab, "Mode B")
+        self.tabWidget.addTab(self.modeAtab, "Mode A")
+        self.tabWidget.addTab(self.modeBtab, "Mode B")
         #self.tabWidget.addTab(self.mode3tab, "Mode 3")
-        self.tabWidget.addTab(self.mode4tab, "Mode C")
+        self.tabWidget.addTab(self.modeCtab, "Mode C")
 
         self.layout.addWidget(self.tabWidget)
         #self.setLayout(self.layout)

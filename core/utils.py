@@ -21,7 +21,7 @@ def import_excel(filename):
     wb = openpyxl.load_workbook(filename)
     for name in wb.get_sheet_names():
         if "Mode1" in name:
-            print("Import mode1 data")
+            print("Import modeA data")
             worksheet = wb.get_sheet_by_name(name)
             for row in worksheet.rows:
                 print(row[1].value)
@@ -62,43 +62,33 @@ class GlobalData():
                 worksheet = wb.get_sheet_by_name(name)
                 data = []
                 if "modea" in name.lower().replace(" ",""):
-                    self.input['mode1'] = {}
-                    self.input['mode1']['tVec'] = []
-                    self.input['mode1']['kVec'] = []
+                    self.input['modeA'] = {}
+                    self.input['modeA']['tVec'] = []
+                    self.input['modeA']['kVec'] = []
                     for row in worksheet.rows:
                         try:
-                            self.input['mode1']['tVec'].append(int(row[0].value))
-                            self.input['mode1']['kVec'].append(int(row[1].value))
+                            self.input['modeA']['tVec'].append(int(row[0].value))
+                            self.input['modeA']['kVec'].append(int(row[1].value))
                         except:
                             pass
                 elif "modeb" in name.lower().replace(" ",""):
-                    self.input['mode2'] = {}
-                    self.input['mode2']['names'] = []
-                    self.input['mode2']['values'] = []
+                    self.input['modeB'] = {}
+                    self.input['modeB']['names'] = []
+                    self.input['modeB']['values'] = []
                     for row in worksheet.rows:
                         try:
-                            self.input['mode2']['values'].append(int(row[1].value))
-                            self.input['mode2']['names'].append(row[0].value)
-                        except:
-                            pass
-                elif "mode3" in name.lower():
-                    self.input['mode3'] = {}
-                    self.input['mode3']['names'] = []
-                    self.input['mode3']['values'] = []
-                    for row in worksheet.rows:
-                        try:
-                            self.input['mode3']['values'].append(int(row[1].value))
-                            self.input['mode3']['names'].append(row[0].value)
+                            self.input['modeB']['values'].append(int(row[1].value))
+                            self.input['modeB']['names'].append(row[0].value)
                         except:
                             pass
                 elif "modec" in name.lower().replace(" ",""):
-                    self.input['mode4'] = {}
-                    self.input['mode4']['names'] = []
-                    self.input['mode4']['values'] = []
+                    self.input['modeC'] = {}
+                    self.input['modeC']['names'] = []
+                    self.input['modeC']['values'] = []
                     for row in worksheet.rows:
                         try:
-                            self.input['mode4']['values'].append(float(row[1].value))
-                            self.input['mode4']['names'].append(row[0].value)
+                            self.input['modeC']['values'].append(float(row[1].value))
+                            self.input['modeC']['names'].append(row[0].value)
                         except:
                             pass
                     

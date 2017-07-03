@@ -16,14 +16,14 @@ import numpy as np
 #Check if float128 is available. If it is, use WeibullNumPy else use WeibullMP
 from core.models import WeibullNumpy as Weibull
 
-class Mode1TabWidget(ModeTabWidget):
+class ModeATabWidget(ModeTabWidget):
     def __init__(self, globalData):
         self.globalData = globalData
         super().__init__(globalData)
         self.tableWidget.setHorizontalHeaderLabels(['Time Interval','Errors'])
         self.tableWidget.cellChanged.connect(self.tableChanged)
         self.dataChanged = False
-        self.modex = 'mode1'
+        self.modex = 'modeA'
 
     def compute(self):
         """
@@ -47,7 +47,7 @@ class Mode1TabWidget(ModeTabWidget):
                 self.cw.results.connect(self.saveAndDisplayResults)
                 self.dataChanged = False
             else:
-                self.res = Mode1ResultsWidget(self.model)
+                self.res = ModeAResultsWidget(self.model)
     
     def setGlobalData(self, data):
         tVec = [int(a) for a,b in data]
@@ -59,8 +59,8 @@ class Mode1TabWidget(ModeTabWidget):
 
     def saveAndDisplayResults(self, weibull):
         self.model = weibull
-        self.globalData.output['mode1'] = weibull
-        self.res = Mode1ResultsWidget(self.model)
+        self.globalData.output['modeA'] = weibull
+        self.res = ModeAResultsWidget(self.model)
 
     def populateTable(self):
         #self.setGlobalData(data)
@@ -100,9 +100,9 @@ class Mode1TabWidget(ModeTabWidget):
         return data
 
 
-class Mode1ResultsWidget(QDialog):
+class ModeAResultsWidget(QDialog):
     def __init__(self, weibull, parent=None):
-        super(Mode1ResultsWidget, self).__init__(parent)
+        super(ModeAResultsWidget, self).__init__(parent)
         self.model = weibull
         layout = QVBoxLayout(self)
 
@@ -129,8 +129,8 @@ class Mode1ResultsWidget(QDialog):
         self.tabWidget.addTab(self.inciCurveTab,"Incidence Curve")
         self.tabWidget.addTab(self.dataSheetTab, "Time Based Model Output Data Sheet")
         self.tabWidget.addTab(self.estErrorsTab,"Estimated Errors")
-
-
+        
+    
         layout.addWidget(self.errorsToDate)
         layout.addWidget(self.totalProjected)
         layout.addWidget(self.percentOfErrors)
@@ -139,7 +139,7 @@ class Mode1ResultsWidget(QDialog):
         #layout.addWidget(self.genErrorEstLayout())
         layout.addWidget(self.tabWidget)
         layout.addLayout(self.genButtonLayout())
-        self.setWindowTitle("Estimated Errors")
+        self.setWindowTitle('SwEET - Mode A Results')
         self.move(400,400)
         self.show()
     

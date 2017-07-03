@@ -16,11 +16,11 @@ from core.models import WeibullNumpy as Weibull
 from gui.mode3 import Mode3ResultsWidget
 
 
-class Mode2TabWidget(ModeTabWidget):
+class ModeBTabWidget(ModeTabWidget):
     def __init__(self, globalData):
         super().__init__(globalData)
         self.globalData = globalData
-        self.modex = 'mode2'
+        self.modex = 'modeB'
         self.tableWidget.setHorizontalHeaderLabels(['Phase Name','Data Points'])
         self.tableWidget.cellChanged.connect(self.tableChanged)
         self.dataChanged = False
@@ -38,14 +38,14 @@ class Mode2TabWidget(ModeTabWidget):
         self.phaseValues = self.globalData.input[self.modex]['values']
         if len(data) == 0:
             QMessageBox.about(self, 'Error','No data found in table. Please add a dataset')
-        elif max(self.phaseValues) > len(self.globalData.input['mode1']['tVec']):
+        elif max(self.phaseValues) > len(self.globalData.input['modeA']['tVec']):
             QMessageBox.about(self, 'Error','Phase Values do not total to length of input in Phase 1')
-        elif 'mode2' in self.globalData.output.keys() and self.dataChanged == False:
-            self.saveAndDisplayResults(self.globalData.output['mode2'])
+        elif 'modeB' in self.globalData.output.keys() and self.dataChanged == False:
+            self.saveAndDisplayResults(self.globalData.output['modeB'])
         else:
             self.dataChanged = False
-            totalKVec = self.globalData.input['mode1']['kVec']
-            totalTVec = self.globalData.input['mode1']['tVec']
+            totalKVec = self.globalData.input['modeA']['kVec']
+            totalTVec = self.globalData.input['modeA']['tVec']
             self.cw = ComputeWidget(totalTVec, totalKVec, self.phaseValues)
             self.cw.results.connect(self.saveAndDisplayResults)
             
@@ -55,7 +55,7 @@ class Mode2TabWidget(ModeTabWidget):
         self.globalData.output[self.modex] = models
         
         self.computeMode3(models)
-        self.resultWindow = Mode2ResultsWidget(models, self.phaseNames, self.phaseValues, self.results)
+        self.resultWindow = ModeBResultsWidget(models, self.phaseNames, self.phaseValues, self.results)
         #self.resultWindow2 = Mode3ResultsWidget(self.results, self.phaseNames)
         #self.results = 
     
@@ -187,7 +187,7 @@ class Mode2TabWidget(ModeTabWidget):
             return False
 
 
-class Mode2ResultsWidget(QWidget):
+class ModeBResultsWidget(QWidget):
     def __init__(self, models, phaseNames, phaseValues, results,  parent=None):
         super().__init__()
         self.models = models
@@ -196,7 +196,7 @@ class Mode2ResultsWidget(QWidget):
         self.results = results
         self.tabWidget = QTabWidget()
 
-        self.tabWidget.addTab(self.mode2ResultPlot(), "Mode 2 Results")
+        self.tabWidget.addTab(self.modeBResultPlot(), "Mode 2 Results")
         self.tabWidget.addTab(self.mode3ResultPlot(), "Mode 3 Results")
 
         layout = QVBoxLayout(self)
@@ -205,7 +205,7 @@ class Mode2ResultsWidget(QWidget):
         self.show()
         
 
-    def mode2ResultPlot(self):
+    def modeBResultPlot(self):
         widget = QWidget()
         fig = plt.figure()
         canvas = FigureCanvas(fig)
@@ -231,7 +231,7 @@ class Mode2ResultsWidget(QWidget):
         canvas.draw()
         plt.grid(True)
         plt.tight_layout()
-
+        self.setWindowTitle('SwEET - Mode B Results')
         layoutfig = QVBoxLayout()
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
