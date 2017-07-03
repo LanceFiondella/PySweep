@@ -351,7 +351,7 @@ class ModeAResultsWidget(QDialog):
     def getTableData(self):
         #Labels defined again to remove new line characters from the titles
         tableLabels = ['Interval','Actual Error', 'Estimated Error', \
-                        'Error Delta', 'Relative Data', 'Cumulative % of E', 'Actual Cumulation', \
+                        'Error Delta', 'Relative Delta', 'Cumulative % of Error', 'Actual Cumulation', \
                             'Estimated Cumulation', 'Cumulation Delta', 'Relative Delta']
         data = [tableLabels]
         for i in range(self.tableWidget.rowCount()):
