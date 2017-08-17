@@ -13,7 +13,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 import numpy as np
 from core.models import WeibullNumpy as Weibull
-from gui.mode3 import Mode3ResultsWidget
+#from gui.mode3 import Mode3ResultsWidget
 
 
 class ModeBTabWidget(ModeTabWidget):
