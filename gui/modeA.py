@@ -296,7 +296,7 @@ class ModeAResultsWidget(QDialog):
         ax1 = fig.add_subplot(111)
         ax1.bar([i for i in self.model.tVec], self.model.kVec, width=0.4, color='b', label="Actual")
         #ax1.bar([i+0.2 for i in self.model.tVec], self.model.FI_vals, width=0.4, color='r', label="Estimated")
-        ax1.plot([0]+self.model.FI_vals, color='r', label='Estimated')      #Added [0] to the begining of FI_vals because vector starts from 1 not 0
+        ax1.plot(self.model.tVec,self.model.FI_vals, color='r', label='Estimated')      #Added [0] to the begining of FI_vals because vector starts from 1 not 0
         ax1.set_xlabel("Intervals")
         ax1.set_ylabel("Errors")
         ax1.set_title("Incidence Curve")
