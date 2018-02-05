@@ -230,12 +230,13 @@ class ModeBResultsWidget(QWidget):
         ax.legend()
         canvas.draw()
         plt.grid(True)
-        plt.tight_layout()
+        
         self.setWindowTitle('SwEET - Mode B Results')
         layoutfig = QVBoxLayout()
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
         widget.setLayout(layoutfig)
+        plt.tight_layout()
         return widget
 
     def mode3ResultPlot(self):
@@ -259,12 +260,11 @@ class ModeBResultsWidget(QWidget):
         ax.set_title("Error Discovery Data and Fitted Histograms")
         ax.legend()
         canvas.draw()
-        plt.tight_layout()
-
         layoutfig = QVBoxLayout()
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
         widget.setLayout(layoutfig)
+        plt.tight_layout()
         return widget
 
     

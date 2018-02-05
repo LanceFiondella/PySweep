@@ -291,7 +291,7 @@ class ModeCResultsDialog(QWidget):
         ax2.set_ylabel("Errors")
         ax2.set_title("Phase Injection/Detection/Leakage")
         ax2.legend()
-        plt.tight_layout()
+        
         canvas2.draw()
 
         #Table definition
@@ -315,12 +315,13 @@ class ModeCResultsDialog(QWidget):
         layoutfig2.addWidget(canvas2, 1)
         layoutfig2.addWidget(tableWidget2)
         layoutfig2.setAlignment(tableWidget2, Qt.AlignBottom)
+        plt.tight_layout()
         return layoutfig2
 
     def genLeftPlot(self):
         #figure def
         fig = plt.figure()
-        #plt.tight_layout()
+        #
         plt.grid(True)
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
@@ -353,11 +354,12 @@ class ModeCResultsDialog(QWidget):
         layoutfig.addWidget(canvas, 1)
         layoutfig.addWidget(tableWidget)
         layoutfig.setAlignment(tableWidget, Qt.AlignBottom)
+        plt.tight_layout()
         return layoutfig
 
     def genLeakageRatePlot(self):
         fig = plt.figure()
-        #plt.tight_layout()
+        #
         plt.grid(True)
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
@@ -368,7 +370,7 @@ class ModeCResultsDialog(QWidget):
         ax1.set_xlabel("Phases")
         ax1.set_ylabel("Percentage of Defects")
         ax1.set_title("Leakage Rate by phase")
-        ax1.legend()
+        #ax1.legend()
         canvas.draw()
 
         #table def
@@ -393,4 +395,5 @@ class ModeCResultsDialog(QWidget):
         layout.addWidget(canvas, 1)
         layout.addWidget(tableWidget1)
         layout.setAlignment(tableWidget1, Qt.AlignBottom)
+        plt.tight_layout()
         return layout

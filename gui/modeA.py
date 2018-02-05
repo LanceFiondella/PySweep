@@ -265,9 +265,8 @@ class ModeAResultsWidget(QDialog):
     
     def genCumuCurve(self):
         fig = plt.figure()
-        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-           ncol=2, mode="expand", borderaxespad=0.)
-        plt.tight_layout()
+        
+        
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
         ax1 = fig.add_subplot(111)
@@ -276,20 +275,22 @@ class ModeAResultsWidget(QDialog):
         ax1.set_xlabel("Intervals")
         ax1.set_ylabel("Errors")
         ax1.set_title("Cumulative Curve")
+        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+           ncol=2, mode="expand", borderaxespad=0.)
         ax1.legend()
         canvas.draw()
         layoutfig = QVBoxLayout()
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
+        plt.tight_layout()
         return layoutfig
 
 
 
     def genInciCurve(self):
         fig = plt.figure()
-        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-           ncol=2, mode="expand", borderaxespad=0.)
-        plt.tight_layout()
+        
+        #plt.tight_layout()
         plt.grid(True)
         canvas = FigureCanvas(fig)
         toolbar = NavigationToolbar(canvas, self)
@@ -300,11 +301,14 @@ class ModeAResultsWidget(QDialog):
         ax1.set_xlabel("Intervals")
         ax1.set_ylabel("Errors")
         ax1.set_title("Incidence Curve")
+        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+           ncol=2, mode="expand", borderaxespad=0.)
         ax1.legend()
         canvas.draw()
         layoutfig = QVBoxLayout()
         layoutfig.addWidget(toolbar)
         layoutfig.addWidget(canvas, 1)
+        plt.tight_layout()
         return layoutfig
 
 
