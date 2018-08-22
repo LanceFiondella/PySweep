@@ -30,7 +30,7 @@ class ModeCTabWidget(ModeTabWidget):
         buttonLayout = QVBoxLayout()
         buttons = []
         
-        latentErrorLabel = QLabel('Enter Latent Error :')
+        latentErrorLabel = QLabel('Enter Latent Defect :')
         self.latentErrorBox = QLineEdit()
         self.latentErrorBox.setText('1.32')
         self.computeButton = QPushButton('Compute')
@@ -140,7 +140,7 @@ class ModeCResultsDialog(QWidget):
         widget = QWidget()
         layout = QVBoxLayout()
         labels = [ "<b> Updated Estimate of latency: </b> {:.6f}".format(self.di.UEL),
-                "<b>Number of Relative Errors : </b> {:.6f}".format(self.di.RE2)
+                "<b>Number of Relative Defects : </b> {:.6f}".format(self.di.RE2)
                 ]
         for label in labels:
             l = QLabel()
@@ -256,7 +256,7 @@ class ModeCResultsDialog(QWidget):
                 tableItemRow[col].setText('{:.6f}'.format(data[row][col]))
                 tableWidget.setItem(curr_row + row, col, tableItemRow[col])
 
-        tableWidget.setVerticalHeaderLabels(self.di.names + [' ', 'Calculated', 'User Input Defects', 'Relative Error'])
+        tableWidget.setVerticalHeaderLabels(self.di.names + [' ', 'Calculated', 'User Input Defects', 'Relative Defect'])
         layout.addWidget(tableWidget)
         return layout
 
@@ -266,7 +266,7 @@ class ModeCResultsDialog(QWidget):
         
         labels.append(QLabel("<h3><b>Total Detected:</b> {:.2f}</h3>".format(self.di.total_defects)))
         labels.append(QLabel("<h3><b>Total Injected:</b> {:.2f}</h3>".format(self.di.TDI)))
-        labels.append(QLabel("<h3><b>Latent Error:</b> {:.2f}</h3>".format(self.di.latent_defects)))
+        labels.append(QLabel("<h3><b>Latent Defect:</b> {:.2f}</h3>".format(self.di.latent_defects)))
         labels.append(QLabel("<h3><b>Peak at Phase:</b> {:.2f}</h3>".format(self.di.profile_peak)))
         for label in labels:
             label.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -288,7 +288,7 @@ class ModeCResultsDialog(QWidget):
         ax2.bar([i+1 for i in range(self.di.num_phases)], self.di.DDR, width=0.2, color='r', label="Detected")
         ax2.bar([i+1+0.2 for i in range(self.di.num_phases)], self.di.LEAK, width=0.2, color='g', label="Leakage")
         ax2.set_xlabel("Phases")
-        ax2.set_ylabel("Errors")
+        ax2.set_ylabel("Defects")
         ax2.set_title("Phase Injection/Detection/Leakage")
         ax2.legend()
         
@@ -330,7 +330,7 @@ class ModeCResultsDialog(QWidget):
         ax1.bar([i+1-0.2 for i in range(self.di.num_phases)], self.di.I2, width=0.4, color='b', label="Injected")
         ax1.bar([i+1+0.2 for i in range(self.di.num_phases)], self.di.D2, width=0.4, color='r', label="Detected")
         ax1.set_xlabel("Phases")
-        ax1.set_ylabel("Errors")
+        ax1.set_ylabel("Defects")
         ax1.set_title("Defects/KSLOC Injected or discovered in phase")
         ax1.legend()
         canvas.draw()

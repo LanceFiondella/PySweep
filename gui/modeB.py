@@ -37,9 +37,9 @@ class ModeBTabWidget(ModeTabWidget):
         self.phaseNames = self.globalData.input[self.modex]['names']
         self.phaseValues = self.globalData.input[self.modex]['values']
         if len(data) == 0:
-            QMessageBox.about(self, 'Error','No data found in table. Please add a dataset')
+            QMessageBox.about(self, 'Defect','No data found in table. Please add a dataset')
         elif max(self.phaseValues) > len(self.globalData.input['modeA']['tVec']):
-            QMessageBox.about(self, 'Error','Phase Values do not total to length of input in Phase 1')
+            QMessageBox.about(self, 'Defect','Phase Values do not total to length of input in Phase 1')
         elif 'modeB' in self.globalData.output.keys() and self.dataChanged == False:
             self.saveAndDisplayResults(self.globalData.output['modeB'])
         else:
@@ -225,8 +225,8 @@ class ModeBResultsWidget(QWidget):
         ax.bar([i+1+0.1 for i in range(len(self.phaseNames))], [self.models[-1].MVF(t+1, a, b, c) for t in range(len(self.phaseNames))] , width=0.2, color='r', label="Estimated")
 
         ax.set_xlabel("Phases")
-        ax.set_ylabel("Cumulative Errors")
-        ax.set_title("Error Discovery Data and Fitted Histograms")
+        ax.set_ylabel("Cumulative Defects")
+        ax.set_title("Defect Discovery Data and Fitted Histograms")
         ax.legend()
         canvas.draw()
         plt.grid(True)
@@ -256,8 +256,8 @@ class ModeBResultsWidget(QWidget):
         #ax.bar([i+1+0.2 for i in range(len(self.phaseNames))], self.results['upper'], width=0.2, color='r', label="Upper")
         
         ax.set_xlabel("Phases")
-        ax.set_ylabel("Errors")
-        ax.set_title("Error Discovery Data and Fitted Histograms")
+        ax.set_ylabel("Defects")
+        ax.set_title("Defect Discovery Data and Fitted Histograms")
         ax.legend()
         canvas.draw()
         layoutfig = QVBoxLayout()

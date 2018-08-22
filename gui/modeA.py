@@ -20,7 +20,7 @@ class ModeATabWidget(ModeTabWidget):
     def __init__(self, globalData):
         self.globalData = globalData
         super().__init__(globalData)
-        self.tableWidget.setHorizontalHeaderLabels(['Time Interval','Errors'])
+        self.tableWidget.setHorizontalHeaderLabels(['Time Interval','Defects'])
         self.tableWidget.cellChanged.connect(self.tableChanged)
         self.dataChanged = False
         self.modex = 'modeA'
@@ -33,7 +33,7 @@ class ModeATabWidget(ModeTabWidget):
         print("Compute")
         data = self.getTableData()
         if len(data) == 0:
-            QMessageBox.about(self, 'Error','No data found in table. Please add a dataset')
+            QMessageBox.about(self, 'Defect','No data found in table. Please add a dataset')
         else:
             temp_tVec = data['tVec']
             temp_kVec = data['kVec']
@@ -107,11 +107,11 @@ class ModeAResultsWidget(QDialog):
         layout = QVBoxLayout(self)
 
         self.errorsToDate = QLabel()
-        self.errorsToDate.setText("<b>Errors discovered to date:</b> {:.6f}".format(self.model.total_failures))
+        self.errorsToDate.setText("<b>Defects discovered to date:</b> {:.6f}".format(self.model.total_failures))
         self.totalProjected = QLabel()
-        self.totalProjected.setText("<b>Total errors projected:</b> {:.6f}".format(self.model.a_est))
+        self.totalProjected.setText("<b>Total Defects projected:</b> {:.6f}".format(self.model.a_est))
         self.percentOfErrors = QLabel()
-        self.percentOfErrors.setText("<b>Percentage of projected errors found to date:</b> {:.6f}".format(100.0*self.model.total_failures/self.model.a_est))
+        self.percentOfErrors.setText("<b>Percentage of projected Defects found to date:</b> {:.6f}".format(100.0*self.model.total_failures/self.model.a_est))
         self.estPeakLocation = QLabel()
         self.estPeakLocation.setText("<b>Estimated location of peak:</b> {:.6f} ".format(self.model.get_peak_loc()+1)) #Added 1 because of Python 0 indexing
 
@@ -128,7 +128,7 @@ class ModeAResultsWidget(QDialog):
         self.tabWidget.addTab(self.cumuCurveTab, "Cumulative Curve")
         self.tabWidget.addTab(self.inciCurveTab,"Incidence Curve")
         self.tabWidget.addTab(self.dataSheetTab, "Time Based Model Output Data Sheet")
-        self.tabWidget.addTab(self.estErrorsTab,"Estimated Errors")
+        self.tabWidget.addTab(self.estErrorsTab,"Estimated Defects")
         
     
         layout.addWidget(self.errorsToDate)
@@ -146,14 +146,14 @@ class ModeAResultsWidget(QDialog):
     def genErrorEstLayout(self):
         #errorEstGroupBox = QGroupBox("Error Estimate Selection", self)
         
-        intervalErrorGroupBox = QGroupBox("Estimated Errors based on Intervals Entered (n)", self)
+        intervalErrorGroupBox = QGroupBox("Estimated Defects based on Intervals Entered (n)", self)
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignTop)
         noie = QLabel("{} {}".format("<b>Number of intervals entered:</b>",self.model.n))
         noie.setAlignment(Qt.AlignCenter)
-        tedtd = QLabel("{} {:.6f}".format("<b>Total Errors Discovered to Date:</b>", self.model.total_failures))
+        tedtd = QLabel("{} {:.6f}".format("<b>Total Defects Discovered to Date:</b>", self.model.total_failures))
         tedtd.setAlignment(Qt.AlignCenter)
-        tep = QLabel("<b>Total Errors Projected:</b> {0:.6f}".format(self.model.a_est))
+        tep = QLabel("<b>Total Defects Projected:</b> {0:.6f}".format(self.model.a_est))
         tep.setAlignment(Qt.AlignCenter)
         layout.addWidget(noie)
         layout.addWidget(tedtd)
@@ -175,7 +175,7 @@ class ModeAResultsWidget(QDialog):
         self.percent = 0
         self.intervalsNeeded = 0
         self.intervalsRemain = 0
-        percentErrorGroupBox = QGroupBox("Estimated Errors based on Percentage (p)", self)
+        percentErrorGroupBox = QGroupBox("Estimated Defects based on Percentage (p)", self)
         layout = QVBoxLayout()
         label = QLabel("Enter Data (p) : ")
         self.dataTextBoxP = QLineEdit()
@@ -193,7 +193,7 @@ class ModeAResultsWidget(QDialog):
 
     def genEstimatedErrorBox(self):
         self.intervals = 0
-        percentErrorGroupBox = QGroupBox("Estimated Total Errors based on Intervals through m (n+m)", self)
+        percentErrorGroupBox = QGroupBox("Estimated Total Defects based on Intervals through m (n+m)", self)
         layout = QVBoxLayout()
         label = QLabel("Enter Data (m) : ")
         self.dataTextBoxM = QLineEdit()
@@ -208,10 +208,10 @@ class ModeAResultsWidget(QDialog):
         numer = math.log(1 - (99.99 / 100))
         term = - numer / b
         self.intervals99 = math.pow(term, 1/c)
-        poped = QLabel("<b>Intervals Needed to Achieve 99.99% of Total Errors:</b> {0:.6f}".format(self.intervals99))
-        self.tedti = QLabel("<b>Total Errors Discovered through Interval (m):</b> {0:.6f}".format(self.errorsThroughM))
-        self.eeimi = QLabel("<b>Estimated Errors in (m) intervals:</b> {0:.6f}".format(self.errorsInM))
-        self.pote =  QLabel("<b>Percentage of Total Errors:</b> {0:.6f}".format(100.0* self.errorsThroughM / a))
+        poped = QLabel("<b>Intervals Needed to Achieve 99.99% of Total Defects:</b> {0:.6f}".format(self.intervals99))
+        self.tedti = QLabel("<b>Total Defects Discovered through Interval (m):</b> {0:.6f}".format(self.errorsThroughM))
+        self.eeimi = QLabel("<b>Estimated Defects in (m) intervals:</b> {0:.6f}".format(self.errorsInM))
+        self.pote =  QLabel("<b>Percentage of Total Defects:</b> {0:.6f}".format(100.0* self.errorsThroughM / a))
         layout.addWidget(label)
         layout.addWidget(self.dataTextBoxM)
         layout.addWidget(poped)
@@ -223,7 +223,7 @@ class ModeAResultsWidget(QDialog):
 
     def compute(self):
         if self.isFloat(self.dataTextBoxM.text()) == False and self.isFloat(self.dataTextBoxP.text())==False:
-            QMessageBox.about(self, 'Error','Please enter a valid input')
+            QMessageBox.about(self, 'Defect','Please enter a valid input')
 
         if self.isFloat(self.dataTextBoxM.text()):
             self.intervals = float(self.dataTextBoxM.text())
@@ -233,9 +233,9 @@ class ModeAResultsWidget(QDialog):
             c = self.model.c_est
             self.errorsThroughM = self.model.MVF(t, a, b, c)
             self.errorsInM = self.errorsThroughM - self.model.total_failures
-            self.tedti.setText("<b>Total Errors Discovered through Interval (m):</b> {0:.6f}".format(self.errorsThroughM))
-            self.eeimi.setText("<b>Estimated Errors in (m) intervals:</b> {0:.6f}".format(self.errorsInM))
-            self.pote.setText("<b>Percentage of Total Errors:</b> {0:.6f}".format(100.0* self.errorsThroughM / a))
+            self.tedti.setText("<b>Total Defects Discovered through Interval (m):</b> {0:.6f}".format(self.errorsThroughM))
+            self.eeimi.setText("<b>Estimated Defects in (m) intervals:</b> {0:.6f}".format(self.errorsInM))
+            self.pote.setText("<b>Percentage of Total Defects:</b> {0:.6f}".format(100.0* self.errorsThroughM / a))
             
         
         if self.isFloat(self.dataTextBoxP.text()):
@@ -273,7 +273,7 @@ class ModeAResultsWidget(QDialog):
         ax1.plot(self.model.tVec, self.model.kVec_cumu_sum, 'b', label="Actual")
         ax1.plot(self.model.tVec, self.model.MVF_cumu_vals, 'r', label="Estimated")
         ax1.set_xlabel("Intervals")
-        ax1.set_ylabel("Errors")
+        ax1.set_ylabel("Defects")
         ax1.set_title("Cumulative Curve")
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
            ncol=2, mode="expand", borderaxespad=0.)
@@ -299,7 +299,7 @@ class ModeAResultsWidget(QDialog):
         #ax1.bar([i+0.2 for i in self.model.tVec], self.model.FI_vals, width=0.4, color='r', label="Estimated")
         ax1.plot(self.model.tVec,self.model.FI_vals, color='r', label='Estimated')      #Added [0] to the begining of FI_vals because vector starts from 1 not 0
         ax1.set_xlabel("Intervals")
-        ax1.set_ylabel("Errors")
+        ax1.set_ylabel("Defects")
         ax1.set_title("Incidence Curve")
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
            ncol=2, mode="expand", borderaxespad=0.)
@@ -318,8 +318,8 @@ class ModeAResultsWidget(QDialog):
         self.tableWidget = QTableWidget()
         self.tableWidget.setRowCount(self.model.n)
         self.tableWidget.setColumnCount(10)
-        self.tableLabels = ['Interval','Actual Error', 'Estimated Error', \
-                                    'Error Delta', 'Relative Data', 'Cumulative\n % of E', 'Actual\n Cumulation', \
+        self.tableLabels = ['Interval','Actual Defect', 'Estimated Defect', \
+                                    'Defect Delta', 'Relative Data', 'Cumulative\n % of E', 'Actual\n Cumulation', \
                                      'Estimated\n Cumulation', 'Cumulation\n Delta', 'Relative Delta']
         self.tableWidget.setHorizontalHeaderLabels(self.tableLabels)
         self.populateTable()
@@ -354,8 +354,8 @@ class ModeAResultsWidget(QDialog):
 
     def getTableData(self):
         #Labels defined again to remove new line characters from the titles
-        tableLabels = ['Interval','Actual Error', 'Estimated Error', \
-                        'Error Delta', 'Relative Delta', 'Cumulative % of Error', 'Actual Cumulation', \
+        tableLabels = ['Interval','Actual Defect', 'Estimated Defect', \
+                        'Defect Delta', 'Relative Delta', 'Cumulative % of Defect', 'Actual Cumulation', \
                             'Estimated Cumulation', 'Cumulation Delta', 'Relative Delta']
         data = [tableLabels]
         for i in range(self.tableWidget.rowCount()):
