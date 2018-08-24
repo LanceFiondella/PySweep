@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
 
     def openProject(self):
         fname = QFileDialog.getOpenFileName(self, 'Open File','.', filter='*.xlsx')
-        print(fname)
+        #print(fname)
         self.globalData.import_input_excel(fname[0])
         self.tabs.modeAtab.populateTable()
         self.tabs.modeBtab.populateTable()

@@ -80,7 +80,9 @@ class WeibullNumpy():
             self.ll_error_list.append(self.ll_error)
         #print('Total iterations : {} '.format(j))    
         #print(self.ll_list[-1], self.arule[-1], self.brule[-1], self.crule[-1])
-        return {'ll':self.ll_list[-1], 'a':self.arule[-1], 'b':self.brule[-1], 'c':self.crule[-1]}
+        data = {'ll':self.ll_list[-1], 'a':self.arule[-1], 'b':self.brule[-1], 'c':self.crule[-1]}
+        print("Weibull Parameters: \n\tlog likeihood = {} \n\ta = {} \n\tb = {} \n\tc = {}".format(data['ll'], data['a'], data['b'], data['c']))
+        return data
         
     def logL(self, a, b, c):
         """

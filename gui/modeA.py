@@ -96,7 +96,7 @@ class ModeATabWidget(ModeTabWidget):
                 pass
         data['tVec'] = names
         data['kVec'] = values
-        print(data)
+        #print(data)
         return data
 
 

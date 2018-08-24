@@ -51,7 +51,7 @@ class ModeBTabWidget(ModeTabWidget):
             
 
     def saveAndDisplayResults(self, models):
-        print("saving results...  {}".format(len(models)))
+        #print("saving results...  {}".format(len(models)))
         self.globalData.output[self.modex] = models
         
         self.computeMode3(models)
@@ -64,7 +64,7 @@ class ModeBTabWidget(ModeTabWidget):
         col1Name = 'names'
         col2Name = 'values'
         data = self.globalData.input[self.modex]
-        print(data)
+        #print(data)
         self.tableWidget.setRowCount(len(data[col1Name]))
         for i in range(len(data[col1Name])):
             tVec = QTableWidgetItem()
@@ -94,7 +94,7 @@ class ModeBTabWidget(ModeTabWidget):
                 pass
         data['names'] = names
         data['values'] = values
-        print(data)
+        #print(data)
         return data
 
     def addComputationButtons(self):
@@ -175,7 +175,7 @@ class ModeBTabWidget(ModeTabWidget):
                 Lt = Gt * (1 - 0.01 * ltol)
             self.upper.append(Ut)
             self.lower.append(Lt)
-        print(self.nom)
+        #print(self.nom)
         self.results = {'upper':self.upper, 'lower':self.lower, 'nominal':self.nom}
         #self.saveAndDisplayResults()
 

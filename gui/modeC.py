@@ -80,7 +80,7 @@ class ModeCTabWidget(ModeTabWidget):
             self.tableWidget.setItem(i,1,kVec)
 
     def tableChanged(self, x, y):
-        print("Table data changed! at : {}, {}".format(x, y))
+        #print("Table data changed! at : {}, {}".format(x, y))
         self.globalData.input[self.modex]['dp'] = self.getTableData()
         self.dataChanged = True
 
@@ -99,7 +99,7 @@ class ModeCTabWidget(ModeTabWidget):
                 pass
         data['names'] = names
         data['values'] = values
-        print(data)
+        #print(data)
         return data
 
 
@@ -374,8 +374,8 @@ class ModeCResultsDialog(QWidget):
         canvas.draw()
 
         #table def
-        print(self.di.EFC)
-        print(self.di.EFV)
+        #print(self.di.EFC)
+        #print(self.di.EFV)
         data = [self.di.LRATE*100.0, self.di.EFC*100.0, self.di.EFV*100.0]
         tableWidget1 = QTableWidget()
         tableWidget1.setRowCount(len(data))
