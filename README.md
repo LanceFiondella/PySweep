@@ -1,14 +1,14 @@
-##Synopsis
+## Synopsis
 This is an open source Python reimplementation of the SoftWare Error Estimation Program (SWEEP) tool
 
-##Requirements
+## Requirements
 Python 3.x
 PyQt5
 numpy
 scipy
 mpmath
 
-##License
+## License
 Copyright (c) 2017 Venkateswaran Shekar
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
